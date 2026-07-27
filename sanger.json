@@ -1,10 +1,8 @@
 [
-  { "id": "haugen",     "tittel": "Sangen om Haugen",              "meta": "Egenlaget", "anledning": "Egne sanger",  "fil": "sangen-om-haugen.mp3" },
+  { "id": "grat-kvinne-en", "tittel": "Congratulations", "meta": "Engelsk · kvinnestemme", "anledning": "Gratulasjon", "fil": "gratulerer-kvinne-en.mp3" },
+  { "id": "grat-mann-en",   "tittel": "Congratulations", "meta": "Engelsk · mannestemme",  "anledning": "Gratulasjon", "fil": "gratulerer-mann-en.mp3" },
+  { "id": "grat-kvinne-no", "tittel": "Gratulerer til deg", "meta": "Norsk · kvinnestemme", "anledning": "Gratulasjon", "fil": "gratulerer-kvinne-no.mp3" },
+  { "id": "grat-mann-no",   "tittel": "Gratulerer til deg", "meta": "Norsk · mannestemme",  "anledning": "Gratulasjon", "fil": "gratulerer-mann-no.mp3" },
 
-  { "id": "bursdag70",  "tittel": "Gratulerer med 70-årsdagen",    "meta": "Bursdag",   "anledning": "Bursdag",      "fil": "bursdag-70.mp3" },
-  { "id": "bursdag80",  "tittel": "Gratulerer med 80-årsdagen",    "meta": "Bursdag",   "anledning": "Bursdag",      "fil": "bursdag-80.mp3" },
-
-  { "id": "gull",       "tittel": "Gratulerer med gullbryllupet",  "meta": "50 år",     "anledning": "Bryllupsdag",  "fil": "gullbryllup.mp3" },
-
-  { "id": "godbedring", "tittel": "God bedring",                   "meta": "Omtanke",   "anledning": "God bedring",  "fil": "god-bedring.mp3" }
+  { "id": "haugen", "tittel": "Sangen om Haugen", "meta": "Egenlaget", "anledning": "Egne sanger", "fil": "sangen-om-haugen.mp3" }
 ]
