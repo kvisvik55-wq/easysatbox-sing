@@ -273,6 +273,8 @@
       <label class="feltnavn" for="hilsenTekst" data-i18n="hilsenLabel"></label>
       <input type="text" id="hilsenTekst" maxlength="40" autocomplete="off" oninput="oppdaterFjordKnapp();tegnForh()">
       <div class="forslag" id="hilsenForslag"></div>
+      <label class="feltnavn" data-i18n="s3t" style="margin-top:18px"></label>
+      <div class="sanger" id="fjordSanger"></div>
       <img id="fjordForh" class="foto skjult" alt="" style="aspect-ratio:768/1376;margin-top:14px">
       <div class="rad">
         <button class="knapp" data-i18n="tilbake" onclick="visAnledninger()"></button>
@@ -661,6 +663,10 @@ function visAnledninger(){
   document.getElementById("lagKnapp").disabled=true;
   document.getElementById("sangView").classList.add("skjult");
   document.getElementById("anledningView").classList.remove("skjult");
+  // Sørg for at steg 3 faktisk vises (også når vi kommer fra fjordsteget)
+  document.querySelectorAll(".steg").forEach(s=>s.classList.remove("aktiv"));
+  document.getElementById("steg3").classList.add("aktiv");
+  document.querySelectorAll("#fremdrift i").forEach((d,i)=>d.classList.toggle("paa", i < 3));
   byggAnledninger();
   etterStegbytte();
 }
@@ -712,12 +718,32 @@ function velgSang(sang, el){
 }
 
 /* ══════════ FJORDHILSEN ══════════ */
+let fjordSang=null;
 function visFjord(){
   stoppForhands();
   document.querySelectorAll(".steg").forEach(s=>s.classList.remove("aktiv"));
   document.getElementById("stegFjord").classList.add("aktiv");
-  byggScener(); byggForslag(); oppdaterFjordKnapp();
+  byggScener(); byggForslag(); byggFjordSanger(); oppdaterFjordKnapp();
   etterStegbytte();
+}
+function byggFjordSanger(){
+  const boks=document.getElementById("fjordSanger"); if(!boks) return; boks.innerHTML="";
+  SANGER.filter(s=>s.url).forEach(sang=>{
+    const kort=document.createElement("div");
+    kort.className="sang"; kort.tabIndex=0; kort.setAttribute("role","button");
+    if(fjordSang && fjordSang.id===sang.id) kort.classList.add("valgt");
+    kort.innerHTML=`
+      <span class="sang__ikon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+      <span class="sang__navn"><div>${sang.tittel}</div><div class="sang__meta">${sang.meta||""}</div></span>
+      <button class="horknapp" type="button" aria-label="${T("hor")} ${sang.tittel}">${IKON_PLAY}<span class="horknapp__tekst">${T("hor")}</span></button>`;
+    const velg=()=>{ fjordSang=sang;
+      boks.querySelectorAll(".sang").forEach(x=>x.classList.remove("valgt"));
+      kort.classList.add("valgt"); kunngjor(sang.tittel); oppdaterFjordKnapp(); };
+    kort.addEventListener("click", velg);
+    kort.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); velg(); }});
+    kort.querySelector(".horknapp").addEventListener("click", e=>{ e.stopPropagation(); forhandsvis(sang, kort.querySelector(".horknapp")); });
+    boks.appendChild(kort);
+  });
 }
 function byggScener(){
   const boks=document.getElementById("scenerBoks"); boks.innerHTML="";
@@ -742,7 +768,7 @@ function byggForslag(){
   });
 }
 function oppdaterFjordKnapp(){
-  const ok = valgtScene && bildeBlob && document.getElementById("hilsenTekst").value.trim().length>0;
+  const ok = valgtScene && bildeBlob && fjordSang && document.getElementById("hilsenTekst").value.trim().length>0;
   document.getElementById("fjordLagKnapp").disabled = !ok;
 }
 
@@ -841,8 +867,8 @@ function tegnForh(){
 async function lagFjordVideo(){
   if(!valgtScene || !bildeBlob) return;
   if(TJENESTE.includes("DIN-TJENESTE-APP")){ visFeil(T("feilTjeneste")); return; }
-  const sang = SANGER.find(s=>s.anledning==="Gratulasjon" && s.url) || SANGER.find(s=>s.url);
-  if(!sang){ visFeil(T("feilSang")); return; }
+  const sang = fjordSang;
+  if(!sang || !sang.url){ visFeil(T("feilSang")); return; }
 
   visSeksjon("steg4"); startLaster();
   try{
@@ -925,7 +951,7 @@ async function lagVideo(){
 }
 function startPaaNytt(){
   stoppForhands();
-  nullstillFoto(); stemmeBlob=null; valgtSang=null; valgtAnledning=null; valgtScene=null; utklippCache=null; mikTilstand="start";
+  nullstillFoto(); stemmeBlob=null; valgtSang=null; valgtAnledning=null; valgtScene=null; fjordSang=null; utklippCache=null; mikTilstand="start";
   document.getElementById("stemmeVis").classList.add("skjult");
   document.getElementById("samtykke").checked=false;
   document.getElementById("timer").textContent="0:00";
