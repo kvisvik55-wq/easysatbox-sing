@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EasySatBox Sing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gronn-dyp:#14301f; --gronn:#1f4a30; --gronn-lys:#2c6844;
+    --gull:#cfa64e; --gull-lys:#e6c877; --krem:#f6f0e2; --kort:#fbf7ec;
+    --tekst:#16281d; --svak:#5a6c60; --roed:#c0503f;
+    --skygge:0 18px 50px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Nunito',system-ui,sans-serif; color:var(--tekst);
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(44,104,68,.45) 0, transparent 60%),
+      linear-gradient(160deg,#0e2417 0%, var(--gronn-dyp) 45%, #0b1d12 100%);
+    min-height:100vh; display:flex; align-items:flex-start; justify-content:center;
+    padding:clamp(14px,4vw,40px); line-height:1.45;
+  }
+  #bakteppe{position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;background-repeat:no-repeat}
+
+  .app{width:100%;max-width:560px}
+
+  /* Topplinje: bakgrunn + språk */
+  .topp{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px}
+  .toppgruppe{display:flex;align-items:center;gap:8px}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(246,240,226,.14);color:var(--krem);
+    border:1.5px solid rgba(230,200,119,.5);border-radius:999px;padding:11px 16px;
+    font-family:'Nunito';font-weight:700;font-size:16px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+  .pill:hover{background:rgba(246,240,226,.22)}
+  .pill:focus-visible{outline:3px solid var(--gull);outline-offset:2px}
+  .pill svg{width:20px;height:20px;flex:none}
+  .pill--rund{padding:11px;border-radius:50%}
+  .pill.aktiv{background:var(--gull);color:var(--gronn-dyp);border-color:var(--gull-lys)}
+  .sr-bare{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .sprakboks select{appearance:none;-webkit-appearance:none;background:transparent;border:none;color:var(--krem);
+    font-family:'Nunito';font-weight:700;font-size:16px;outline:none;cursor:pointer;padding-right:4px}
+  .sprakboks select option{color:#16281d;background:#fff}
+  .skjult{display:none !important}
+
+  /* Merke */
+  .merke{text-align:center;margin-bottom:20px}
+  .merke__ring{width:104px;height:104px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;
+    background:radial-gradient(circle at 50% 40%, var(--gronn-lys), var(--gronn) 70%);
+    border:4px solid var(--gull);box-shadow:0 0 0 6px rgba(207,166,78,.18), var(--skygge);overflow:hidden}
+  .merke__ring img{width:100%;height:100%;object-fit:cover}
+  .merke__ring span{font-family:'Fraunces';font-size:34px;color:var(--gull-lys)}
+  .merke h1{font-family:'Fraunces';font-weight:600;letter-spacing:.14em;color:var(--krem);
+    font-size:clamp(22px,6vw,30px);text-transform:uppercase}
+  .merke p{color:var(--gull-lys);font-weight:700;letter-spacing:.28em;font-size:13px;margin-top:2px}
+
+  /* Fremdrift */
+  .fremdrift{display:flex;gap:8px;justify-content:center;align-items:flex-end;height:26px;margin:0 auto 18px}
+  .fremdrift i{width:7px;height:12px;border-radius:4px;background:rgba(230,200,119,.28);transition:all .35s ease}
+  .fremdrift i.paa{background:var(--gull-lys);height:22px}
+
+  /* Scene */
+  .scene{background:var(--kort);border-radius:26px;padding:clamp(22px,6vw,34px);
+    box-shadow:var(--skygge);border:1px solid rgba(207,166,78,.35)}
+  .steg{display:none;animation:inn .4s ease both}
+  .steg.aktiv{display:block}
+  @media (prefers-reduced-motion:reduce){.steg{animation:none}}
+  @keyframes inn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .eyebrow{color:var(--gull);font-weight:800;letter-spacing:.16em;text-transform:uppercase;font-size:13px}
+  h2{font-family:'Fraunces';font-weight:600;font-size:clamp(26px,7vw,34px);margin:4px 0 6px;line-height:1.1}
+  .ingress{font-size:clamp(17px,4.5vw,19px);color:var(--svak);margin-bottom:24px}
+
+  .knapp{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;
+    font-family:'Nunito';font-weight:800;font-size:21px;padding:20px 22px;border:none;border-radius:18px;cursor:pointer;
+    background:linear-gradient(180deg,var(--gronn-lys),var(--gronn));color:var(--krem);
+    box-shadow:0 8px 20px rgba(20,48,31,.35);transition:transform .12s ease,filter .12s ease;min-height:64px}
+  .knapp:hover{filter:brightness(1.07)}
+  .knapp:active{transform:translateY(2px)}
+  .knapp:focus-visible{outline:4px solid var(--gull);outline-offset:3px}
+  .knapp--gull{background:linear-gradient(180deg,var(--gull-lys),var(--gull));color:var(--gronn-dyp)}
+  .knapp--stor{font-size:23px;padding:24px}
+  .knapp[disabled]{opacity:.45;cursor:not-allowed}
+  .knapp svg{width:26px;height:26px;flex:none}
+
+  .lenke{display:block;width:100%;text-align:center;background:none;border:none;cursor:pointer;
+    color:var(--gronn-lys);font-family:'Nunito';font-weight:700;font-size:17px;padding:14px;margin-top:6px;text-decoration:underline}
+  .lenke:focus-visible{outline:3px solid var(--gull);outline-offset:2px;border-radius:8px}
+
+  .rad{display:flex;gap:12px;margin-top:16px}
+  .rad .knapp{font-size:18px;padding:16px}
+
+  .foto{width:100%;aspect-ratio:1;border-radius:20px;object-fit:cover;background:#e8e1cc;
+    border:3px solid var(--gull);box-shadow:inset 0 0 0 6px rgba(255,255,255,.5)}
+
+  .mikstage{text-align:center;margin:8px 0 18px}
+  .mikknapp{width:150px;height:150px;border-radius:50%;border:5px solid var(--gull);cursor:pointer;
+    background:radial-gradient(circle at 50% 40%,var(--gronn-lys),var(--gronn));color:var(--krem);
+    display:grid;place-items:center;margin:0 auto;box-shadow:0 0 0 0 rgba(192,80,63,.5);transition:transform .12s ease}
+  .mikknapp:active{transform:scale(.96)}
+  .mikknapp:focus-visible{outline:4px solid var(--gull);outline-offset:4px}
+  .mikknapp svg{width:56px;height:56px}
+  .mikknapp.tar-opp{background:radial-gradient(circle at 50% 40%,#d5604d,var(--roed));border-color:var(--gull-lys)}
+  @media (prefers-reduced-motion:no-preference){.mikknapp.tar-opp{animation:puls 1.3s infinite}}
+  @keyframes puls{0%{box-shadow:0 0 0 0 rgba(192,80,63,.5)}70%{box-shadow:0 0 0 24px rgba(192,80,63,0)}100%{box-shadow:0 0 0 0 rgba(192,80,63,0)}}
+  .timer{font-family:'Fraunces';font-size:40px;margin-top:14px;color:var(--gronn)}
+  .hint{font-size:16px;color:var(--svak);margin-top:4px}
+  audio{width:100%;margin-top:16px}
+
+  .samtykke{display:flex;gap:12px;align-items:flex-start;background:#efe8d3;border-radius:14px;padding:16px;margin-top:18px;font-size:16px;text-align:left}
+  .samtykke input{width:26px;height:26px;flex:none;margin-top:1px;accent-color:var(--gronn-lys)}
+  .samtykke label{cursor:pointer}
+
+  .sanger{display:grid;gap:12px;margin-bottom:8px}
+  .sang{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
+    background:#fff;border:3px solid #e6ddc4;border-radius:16px;padding:16px 18px;
+    font-family:'Nunito';font-size:19px;font-weight:700;color:var(--tekst);transition:border-color .15s,background .15s}
+  .sang:hover{border-color:var(--gull)}
+  .sang:focus-visible{outline:4px solid var(--gull);outline-offset:2px}
+  .sang.valgt{border-color:var(--gronn-lys);background:#eef5ef}
+  .sang__ikon{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;
+    background:linear-gradient(180deg,var(--gull-lys),var(--gull));color:var(--gronn-dyp)}
+  .sang__navn{flex:1;min-width:0}
+  .sang__meta{font-size:14px;font-weight:600;color:var(--svak)}
+  .horknapp{margin-left:auto;display:flex;align-items:center;gap:7px;flex:none;
+    background:var(--gronn-lys);color:var(--krem);border:none;border-radius:12px;padding:12px 16px;
+    font-family:'Nunito';font-weight:800;font-size:16px;cursor:pointer}
+  .horknapp:hover{filter:brightness(1.08)}
+  .horknapp:focus-visible{outline:3px solid var(--gull);outline-offset:2px}
+  .horknapp.spiller{background:var(--gull);color:var(--gronn-dyp)}
+  .horknapp svg{width:20px;height:20px}
+
+  .laster{text-align:center;padding:20px 0}
+  .snurr{width:120px;height:120px;margin:0 auto 22px;border-radius:50%;border:8px solid rgba(207,166,78,.25);border-top-color:var(--gull)}
+  @media (prefers-reduced-motion:no-preference){.snurr{animation:rundt 1s linear infinite}}
+  @keyframes rundt{to{transform:rotate(360deg)}}
+  .laster p{font-size:20px;font-weight:800;color:var(--gronn);min-height:28px}
+
+  video{width:100%;border-radius:20px;background:#000;border:3px solid var(--gull)}
+
+  .varsel{background:#f7e4df;border:2px solid var(--roed);color:#7a2a1e;border-radius:14px;padding:16px;font-size:16px;font-weight:700;margin-top:16px}
+</style>
+</head>
+<body>
+<div id="bakteppe"></div>
+<div class="app">
+  <div id="live" class="sr-bare" role="status" aria-live="polite"></div>
+
+  <div class="topp">
+    <div class="toppgruppe">
+      <button class="pill" id="bakgrunnKnapp" onclick="document.getElementById('bakgrunnInput').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5-5L5 20"/></svg>
+        <span data-i18n="bakgrunn">Bakgrunn</span>
+      </button>
+      <button class="pill pill--rund skjult" id="fjernBakgrunn" onclick="fjernBakteppe()" aria-label="Fjern bakgrunn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <button class="pill pill--rund" id="lesKnapp" onclick="veksleLes()" aria-pressed="false" data-i18n-aria="lesOpp" aria-label="Les opp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a9 9 0 0 1 0 12"/></svg>
+      </button>
+    </div>
+    <label class="pill sprakboks">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
+      <select id="sprak" onchange="settSprak(this.value)" data-i18n-aria="velgSprak" aria-label="Velg språk"></select>
+    </label>
+  </div>
+
+  <div class="merke">
+    <div class="merke__ring">
+      <img src="logo.png" alt="EasySatBox Sing" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <span style="display:none">♪</span>
+    </div>
+    <h1>EasySatBox</h1>
+    <p>SING</p>
+  </div>
+
+  <div class="fremdrift" id="fremdrift" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+  <div class="scene">
+
+    <section class="steg aktiv" id="steg1">
+      <div class="eyebrow" data-steg="1"></div>
+      <h2 data-i18n="s1t"></h2>
+      <p class="ingress" data-i18n="s1i"></p>
+      <img id="fotoVis" class="foto skjult" alt="">
+      <div id="fotoValg">
+        <button class="knapp knapp--stor" onclick="document.getElementById('kamera').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span data-i18n="taBilde"></span>
+        </button>
+        <button class="lenke" data-i18n="velgBilder" onclick="document.getElementById('galleri').click()"></button>
+      </div>
+      <div id="fotoKlar" class="skjult">
+        <div class="rad">
+          <button class="knapp" data-i18n="paaNytt" onclick="nullstillFoto()"></button>
+          <button class="knapp knapp--gull" data-i18n="videre" onclick="visSteg(2)"></button>
+        </div>
+      </div>
+      <input type="file" id="kamera" accept="image/*" capture="user" class="skjult" onchange="lastBilde(this)">
+      <input type="file" id="galleri" accept="image/*" class="skjult" onchange="lastBilde(this)">
+    </section>
+
+    <section class="steg" id="steg2">
+      <div class="eyebrow" data-steg="2"></div>
+      <h2 data-i18n="s2t"></h2>
+      <p class="ingress" data-i18n="s2i"></p>
+      <div class="mikstage">
+        <button class="mikknapp" id="mikknapp" onclick="veksleOpptak()">
+          <svg id="mikIkon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+        </button>
+        <div class="timer" id="timer">0:00</div>
+        <div class="hint" id="mikHint"></div>
+      </div>
+      <audio id="stemmeVis" controls class="skjult"></audio>
+      <div class="samtykke">
+        <input type="checkbox" id="samtykke" onchange="oppdaterSteg2()">
+        <label for="samtykke" data-i18n="samtykke"></label>
+      </div>
+      <div class="rad">
+        <button class="knapp" data-i18n="tilbake" onclick="visSteg(1)"></button>
+        <button class="knapp knapp--gull" id="steg2videre" data-i18n="videre" onclick="visSteg(3)" disabled></button>
+      </div>
+    </section>
+
+    <section class="steg" id="steg3">
+      <div class="eyebrow" data-steg="3"></div>
+      <h2 data-i18n="s3t"></h2>
+      <p class="ingress" data-i18n="s3i"></p>
+      <div class="sanger" id="sanger"></div>
+      <div class="rad">
+        <button class="knapp" data-i18n="tilbake" onclick="visSteg(2)"></button>
+        <button class="knapp knapp--gull knapp--stor" id="lagKnapp" data-i18n="lagVideoen" onclick="lagVideo()" disabled></button>
+      </div>
+    </section>
+
+    <section class="steg" id="steg4">
+      <div class="laster">
+        <div class="snurr"></div>
+        <p id="lasterTekst"></p>
+        <p class="hint" data-i18n="lasterHint"></p>
+      </div>
+    </section>
+
+    <section class="steg" id="stegFerdig">
+      <div class="eyebrow" data-i18n="ferdig"></div>
+      <h2 data-i18n="rt"></h2>
+      <p class="ingress" data-i18n="ri"></p>
+      <video id="resultatVideo" controls playsinline></video>
+      <a class="knapp knapp--gull knapp--stor" id="lastNed" download="min-sang.mp4" data-i18n="lastNed" style="margin-top:18px;text-decoration:none"></a>
+      <button class="lenke" data-i18n="lagNy" onclick="startPaaNytt()"></button>
+    </section>
+
+    <div id="feil" class="varsel skjult"></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   KONFIGURASJON — absolutt URL til delt tjeneste-funksjon
+   ══════════════════════════════════════════════════════════ */
+const TJENESTE = "https://easysatbox-photoenhancer.netlify.app/.netlify/functions/sing";
+
+/* Sangbibliotek — dine egne songer.no-klipp (ca. 8 sek), url = direkte lenke */
+const SANGER = [
+  { id:"haugen", tittel:"Sangen om Haugen", meta:"Egenlaget", url:"https://easysatbox-sing.netlify.app/sang/sangen-om-haugen.mp3" },
+  { id:"vise2", tittel:"Kjærlighet fra Gud",  meta:"Salme",        url:"" },
+  { id:"vise3", tittel:"Sommervise",          meta:"Glad og lett", url:"" },
+];
+
+/* ── Språk (12, som Photo Enhancer) ───────────────────── */
+const SPRAK = [["no","Norsk"],["en","English"],["de","Deutsch"],["fr","Français"],["es","Español"],
+  ["it","Italiano"],["ru","Русский"],["ja","日本語"],["zh","中文"],["pl","Polski"],["lv","Latviešu"],["lt","Lietuvių"]];
+
+const I18N = {
+ no:{velgSprak:"Velg språk",lesOpp:"Les opp",bakgrunn:"Bakgrunn",steg:"Steg {n} av 4",ferdig:"Ferdig",
+   s1t:"Ta et bilde",s1i:"Ta et bilde av deg selv, eller velg et du har fra før. Se rett i kameraet med et tydelig ansikt.",
+   taBilde:"Ta bilde",velgBilder:"Velg fra bildene mine",paaNytt:"Ta på nytt",videre:"Videre",tilbake:"Tilbake",
+   s2t:"Spill inn stemmen din",s2i:"Trykk på mikrofonen og snakk eller nynn i cirka 20 sekunder. Da lager vi sangen med akkurat din stemme.",
+   mikStart:"Trykk for å starte",mikStopp:"Trykk for å stoppe",mikFerdig:"Ferdig — hør gjerne på det, eller ta opp på nytt",
+   samtykke:"Jeg godtar at min egen stemme brukes til å lage denne videoen.",
+   s3t:"Velg en sang",s3i:"Trykk på sangen du vil synge.",hor:"Hør",stopp:"Stopp",lagVideoen:"Lag videoen",
+   lasterHint:"Dette tar vanligvis under ett minutt.",
+   laster:["Hører på stemmen din…","Lærer sangen…","Lar deg synge den…","Setter ansiktet i bevegelse…","Nesten ferdig…"],
+   rt:"Nå synger du!",ri:"Se videoen, last den ned eller lag en ny.",lastNed:"Last ned videoen",lagNy:"Lag en ny video",
+   feilVideo:"Vi klarte ikke å lage videoen. Prøv gjerne igjen.",feilMik:"Vi fikk ikke tilgang til mikrofonen. Sjekk at nettleseren har lov til å bruke den.",
+   feilSang:"Denne sangen mangler lydfil ennå.",feilTjeneste:"Tjenesten er ikke satt opp ennå."},
+ en:{velgSprak:"Choose language",lesOpp:"Read aloud",bakgrunn:"Background",steg:"Step {n} of 4",ferdig:"Done",
+   s1t:"Take a photo",s1i:"Take a photo of yourself, or pick one you already have. Look straight at the camera with a clear face.",
+   taBilde:"Take photo",velgBilder:"Choose from my photos",paaNytt:"Retake",videre:"Next",tilbake:"Back",
+   s2t:"Record your voice",s2i:"Tap the microphone and talk or hum for about 20 seconds. Then we make the song in your own voice.",
+   mikStart:"Tap to start",mikStopp:"Tap to stop",mikFerdig:"Done — have a listen, or record again",
+   samtykke:"I agree that my own voice is used to make this video.",
+   s3t:"Choose a song",s3i:"Tap the song you want to sing.",hor:"Listen",stopp:"Stop",lagVideoen:"Make the video",
+   lasterHint:"This usually takes under a minute.",
+   laster:["Listening to your voice…","Learning the song…","Letting you sing it…","Bringing the face to life…","Almost done…"],
+   rt:"Now you're singing!",ri:"Watch the video, download it or make a new one.",lastNed:"Download the video",lagNy:"Make a new video",
+   feilVideo:"We couldn't make the video. Please try again.",feilMik:"We couldn't access the microphone. Check that your browser is allowed to use it.",
+   feilSang:"This song doesn't have an audio file yet.",feilTjeneste:"The service isn't set up yet."},
+ de:{velgSprak:"Sprache wählen",lesOpp:"Vorlesen",bakgrunn:"Hintergrund",steg:"Schritt {n} von 4",ferdig:"Fertig",
+   s1t:"Ein Foto aufnehmen",s1i:"Nimm ein Foto von dir auf oder wähle ein vorhandenes. Schau direkt in die Kamera, mit klarem Gesicht.",
+   taBilde:"Foto aufnehmen",velgBilder:"Aus meinen Fotos wählen",paaNytt:"Neu aufnehmen",videre:"Weiter",tilbake:"Zurück",
+   s2t:"Nimm deine Stimme auf",s2i:"Tippe auf das Mikrofon und sprich oder summe etwa 20 Sekunden. Dann erstellen wir das Lied mit deiner eigenen Stimme.",
+   mikStart:"Zum Starten tippen",mikStopp:"Zum Stoppen tippen",mikFerdig:"Fertig — hör es dir an oder nimm neu auf",
+   samtykke:"Ich stimme zu, dass meine eigene Stimme für dieses Video verwendet wird.",
+   s3t:"Wähle ein Lied",s3i:"Tippe auf das Lied, das du singen möchtest.",hor:"Anhören",stopp:"Stopp",lagVideoen:"Video erstellen",
+   lasterHint:"Das dauert meist unter einer Minute.",
+   laster:["Deine Stimme wird gehört…","Das Lied wird gelernt…","Du darfst es singen…","Das Gesicht wird lebendig…","Fast fertig…"],
+   rt:"Jetzt singst du!",ri:"Sieh dir das Video an, lade es herunter oder erstelle ein neues.",lastNed:"Video herunterladen",lagNy:"Neues Video erstellen",
+   feilVideo:"Wir konnten das Video nicht erstellen. Bitte versuche es erneut.",feilMik:"Kein Zugriff auf das Mikrofon. Prüfe, ob der Browser es verwenden darf.",
+   feilSang:"Dieses Lied hat noch keine Audiodatei.",feilTjeneste:"Der Dienst ist noch nicht eingerichtet."},
+ fr:{velgSprak:"Choisir la langue",lesOpp:"Lire à voix haute",bakgrunn:"Arrière-plan",steg:"Étape {n} sur 4",ferdig:"Terminé",
+   s1t:"Prendre une photo",s1i:"Prenez une photo de vous, ou choisissez-en une existante. Regardez droit vers l'appareil, le visage bien visible.",
+   taBilde:"Prendre une photo",velgBilder:"Choisir dans mes photos",paaNytt:"Reprendre",videre:"Suivant",tilbake:"Retour",
+   s2t:"Enregistrez votre voix",s2i:"Touchez le micro et parlez ou fredonnez environ 20 secondes. Nous créons alors la chanson avec votre propre voix.",
+   mikStart:"Touchez pour démarrer",mikStopp:"Touchez pour arrêter",mikFerdig:"Terminé — écoutez, ou réenregistrez",
+   samtykke:"J'accepte que ma propre voix soit utilisée pour créer cette vidéo.",
+   s3t:"Choisissez une chanson",s3i:"Touchez la chanson que vous voulez chanter.",hor:"Écouter",stopp:"Arrêter",lagVideoen:"Créer la vidéo",
+   lasterHint:"Cela prend généralement moins d'une minute.",
+   laster:["On écoute votre voix…","On apprend la chanson…","On vous fait chanter…","On anime le visage…","Presque terminé…"],
+   rt:"Vous chantez maintenant !",ri:"Regardez la vidéo, téléchargez-la ou créez-en une nouvelle.",lastNed:"Télécharger la vidéo",lagNy:"Créer une nouvelle vidéo",
+   feilVideo:"Nous n'avons pas pu créer la vidéo. Veuillez réessayer.",feilMik:"Impossible d'accéder au micro. Vérifiez que le navigateur y est autorisé.",
+   feilSang:"Cette chanson n'a pas encore de fichier audio.",feilTjeneste:"Le service n'est pas encore configuré."},
+ es:{velgSprak:"Elegir idioma",lesOpp:"Leer en voz alta",bakgrunn:"Fondo",steg:"Paso {n} de 4",ferdig:"Listo",
+   s1t:"Toma una foto",s1i:"Tómate una foto o elige una que ya tengas. Mira de frente a la cámara, con la cara despejada.",
+   taBilde:"Tomar foto",velgBilder:"Elegir de mis fotos",paaNytt:"Repetir",videre:"Siguiente",tilbake:"Atrás",
+   s2t:"Graba tu voz",s2i:"Toca el micrófono y habla o tararea unos 20 segundos. Así creamos la canción con tu propia voz.",
+   mikStart:"Toca para empezar",mikStopp:"Toca para detener",mikFerdig:"Listo — escúchalo o graba de nuevo",
+   samtykke:"Acepto que se use mi propia voz para crear este vídeo.",
+   s3t:"Elige una canción",s3i:"Toca la canción que quieres cantar.",hor:"Escuchar",stopp:"Detener",lagVideoen:"Crear el vídeo",
+   lasterHint:"Esto suele tardar menos de un minuto.",
+   laster:["Escuchando tu voz…","Aprendiendo la canción…","Dejándote cantarla…","Dando vida a la cara…","Casi listo…"],
+   rt:"¡Ahora estás cantando!",ri:"Mira el vídeo, descárgalo o crea uno nuevo.",lastNed:"Descargar el vídeo",lagNy:"Crear un vídeo nuevo",
+   feilVideo:"No pudimos crear el vídeo. Inténtalo de nuevo.",feilMik:"No pudimos acceder al micrófono. Comprueba que el navegador tenga permiso.",
+   feilSang:"Esta canción aún no tiene archivo de audio.",feilTjeneste:"El servicio aún no está configurado."},
+ it:{velgSprak:"Scegli la lingua",lesOpp:"Leggi ad alta voce",bakgrunn:"Sfondo",steg:"Passo {n} di 4",ferdig:"Fatto",
+   s1t:"Scatta una foto",s1i:"Scatta una foto di te stesso o scegline una che hai già. Guarda dritto nella fotocamera, con il viso ben visibile.",
+   taBilde:"Scatta foto",velgBilder:"Scegli dalle mie foto",paaNytt:"Riscatta",videre:"Avanti",tilbake:"Indietro",
+   s2t:"Registra la tua voce",s2i:"Tocca il microfono e parla o canticchia per circa 20 secondi. Così creiamo la canzone con la tua voce.",
+   mikStart:"Tocca per iniziare",mikStopp:"Tocca per fermare",mikFerdig:"Fatto — ascolta, o registra di nuovo",
+   samtykke:"Acconsento all'uso della mia voce per creare questo video.",
+   s3t:"Scegli una canzone",s3i:"Tocca la canzone che vuoi cantare.",hor:"Ascolta",stopp:"Ferma",lagVideoen:"Crea il video",
+   lasterHint:"Di solito ci vuole meno di un minuto.",
+   laster:["Ascoltiamo la tua voce…","Impariamo la canzone…","Ti facciamo cantare…","Diamo vita al viso…","Quasi fatto…"],
+   rt:"Ora stai cantando!",ri:"Guarda il video, scaricalo o creane uno nuovo.",lastNed:"Scarica il video",lagNy:"Crea un nuovo video",
+   feilVideo:"Non siamo riusciti a creare il video. Riprova.",feilMik:"Impossibile accedere al microfono. Verifica che il browser sia autorizzato.",
+   feilSang:"Questa canzone non ha ancora un file audio.",feilTjeneste:"Il servizio non è ancora configurato."},
+ ru:{velgSprak:"Выберите язык",lesOpp:"Озвучить",bakgrunn:"Фон",steg:"Шаг {n} из 4",ferdig:"Готово",
+   s1t:"Сделайте фото",s1i:"Сфотографируйте себя или выберите готовое фото. Смотрите прямо в камеру, лицо должно быть чётко видно.",
+   taBilde:"Сделать фото",velgBilder:"Выбрать из моих фото",paaNytt:"Переснять",videre:"Далее",tilbake:"Назад",
+   s2t:"Запишите свой голос",s2i:"Нажмите на микрофон и говорите или напевайте около 20 секунд. Тогда мы создадим песню вашим голосом.",
+   mikStart:"Нажмите, чтобы начать",mikStopp:"Нажмите, чтобы остановить",mikFerdig:"Готово — послушайте или запишите заново",
+   samtykke:"Я согласен(на), что мой голос используется для создания этого видео.",
+   s3t:"Выберите песню",s3i:"Нажмите на песню, которую хотите спеть.",hor:"Слушать",stopp:"Стоп",lagVideoen:"Создать видео",
+   lasterHint:"Обычно это занимает меньше минуты.",
+   laster:["Слушаем ваш голос…","Разучиваем песню…","Даём вам спеть…","Оживляем лицо…","Почти готово…"],
+   rt:"Теперь вы поёте!",ri:"Посмотрите видео, скачайте его или создайте новое.",lastNed:"Скачать видео",lagNy:"Создать новое видео",
+   feilVideo:"Не удалось создать видео. Попробуйте ещё раз.",feilMik:"Нет доступа к микрофону. Проверьте, разрешено ли браузеру его использовать.",
+   feilSang:"У этой песни пока нет аудиофайла.",feilTjeneste:"Сервис ещё не настроен."},
+ ja:{velgSprak:"言語を選ぶ",lesOpp:"読み上げ",bakgrunn:"背景",steg:"ステップ {n} / 4",ferdig:"完了",
+   s1t:"写真を撮る",s1i:"自分の写真を撮るか、すでにある写真を選びます。顔がはっきり見えるよう、カメラをまっすぐ見てください。",
+   taBilde:"写真を撮る",velgBilder:"自分の写真から選ぶ",paaNytt:"撮り直す",videre:"次へ",tilbake:"戻る",
+   s2t:"声を録音する",s2i:"マイクをタップして、約20秒間話すか口ずさんでください。あなたの声で歌を作ります。",
+   mikStart:"タップして開始",mikStopp:"タップして停止",mikFerdig:"完了 — 聞いてみるか、録音し直せます",
+   samtykke:"この動画の作成に自分の声を使うことに同意します。",
+   s3t:"曲を選ぶ",s3i:"歌いたい曲をタップしてください。",hor:"聞く",stopp:"停止",lagVideoen:"動画を作る",
+   lasterHint:"通常は1分以内で終わります。",
+   laster:["あなたの声を聞いています…","曲を覚えています…","あなたに歌わせています…","顔を動かしています…","もうすぐ完成…"],
+   rt:"あなたが歌っています！",ri:"動画を見て、ダウンロードするか、新しく作りましょう。",lastNed:"動画をダウンロード",lagNy:"新しい動画を作る",
+   feilVideo:"動画を作成できませんでした。もう一度お試しください。",feilMik:"マイクにアクセスできませんでした。ブラウザの使用許可を確認してください。",
+   feilSang:"この曲にはまだ音声ファイルがありません。",feilTjeneste:"サービスがまだ設定されていません。"},
+ zh:{velgSprak:"选择语言",lesOpp:"朗读",bakgrunn:"背景",steg:"第 {n} 步，共 4 步",ferdig:"完成",
+   s1t:"拍一张照片",s1i:"给自己拍张照片，或选择一张已有的。请正视镜头，让面部清晰可见。",
+   taBilde:"拍照",velgBilder:"从我的照片中选择",paaNytt:"重拍",videre:"下一步",tilbake:"返回",
+   s2t:"录下你的声音",s2i:"点击麦克风，说话或哼唱约20秒。我们就用你自己的声音来做这首歌。",
+   mikStart:"点击开始",mikStopp:"点击停止",mikFerdig:"完成 — 可以听听，或重新录制",
+   samtykke:"我同意使用我自己的声音来制作这个视频。",
+   s3t:"选择一首歌",s3i:"点击你想唱的歌。",hor:"试听",stopp:"停止",lagVideoen:"制作视频",
+   lasterHint:"通常不到一分钟。",
+   laster:["正在聆听你的声音…","正在学习这首歌…","让你来唱…","让面部动起来…","即将完成…"],
+   rt:"现在你在唱歌了！",ri:"观看视频，下载它，或再做一个。",lastNed:"下载视频",lagNy:"制作新视频",
+   feilVideo:"无法制作视频，请重试。",feilMik:"无法访问麦克风。请检查浏览器是否有使用权限。",
+   feilSang:"这首歌还没有音频文件。",feilTjeneste:"服务尚未设置。"},
+ pl:{velgSprak:"Wybierz język",lesOpp:"Czytaj na głos",bakgrunn:"Tło",steg:"Krok {n} z 4",ferdig:"Gotowe",
+   s1t:"Zrób zdjęcie",s1i:"Zrób sobie zdjęcie lub wybierz już istniejące. Patrz prosto w aparat, z wyraźnie widoczną twarzą.",
+   taBilde:"Zrób zdjęcie",velgBilder:"Wybierz z moich zdjęć",paaNytt:"Zrób ponownie",videre:"Dalej",tilbake:"Wstecz",
+   s2t:"Nagraj swój głos",s2i:"Dotknij mikrofonu i mów lub nuć przez około 20 sekund. Wtedy stworzymy piosenkę Twoim głosem.",
+   mikStart:"Dotknij, aby rozpocząć",mikStopp:"Dotknij, aby zatrzymać",mikFerdig:"Gotowe — posłuchaj lub nagraj ponownie",
+   samtykke:"Zgadzam się, aby mój głos został użyty do stworzenia tego filmu.",
+   s3t:"Wybierz piosenkę",s3i:"Dotknij piosenki, którą chcesz zaśpiewać.",hor:"Posłuchaj",stopp:"Zatrzymaj",lagVideoen:"Utwórz film",
+   lasterHint:"Zwykle trwa to krócej niż minutę.",
+   laster:["Słuchamy Twojego głosu…","Uczymy się piosenki…","Pozwalamy Ci ją zaśpiewać…","Ożywiamy twarz…","Prawie gotowe…"],
+   rt:"Teraz śpiewasz!",ri:"Obejrzyj film, pobierz go lub utwórz nowy.",lastNed:"Pobierz film",lagNy:"Utwórz nowy film",
+   feilVideo:"Nie udało się utworzyć filmu. Spróbuj ponownie.",feilMik:"Brak dostępu do mikrofonu. Sprawdź, czy przeglądarka ma pozwolenie.",
+   feilSang:"Ta piosenka nie ma jeszcze pliku audio.",feilTjeneste:"Usługa nie jest jeszcze skonfigurowana."},
+ lv:{velgSprak:"Izvēlieties valodu",lesOpp:"Nolasīt skaļi",bakgrunn:"Fons",steg:"{n}. solis no 4",ferdig:"Gatavs",
+   s1t:"Uzņemiet foto",s1i:"Uzņemiet savu foto vai izvēlieties jau esošu. Skatieties tieši kamerā, seja lai ir skaidri redzama.",
+   taBilde:"Uzņemt foto",velgBilder:"Izvēlēties no manām fotogrāfijām",paaNytt:"Uzņemt vēlreiz",videre:"Tālāk",tilbake:"Atpakaļ",
+   s2t:"Ierakstiet savu balsi",s2i:"Pieskarieties mikrofonam un runājiet vai dungojiet apmēram 20 sekundes. Tad izveidosim dziesmu ar jūsu balsi.",
+   mikStart:"Pieskarieties, lai sāktu",mikStopp:"Pieskarieties, lai apturētu",mikFerdig:"Gatavs — noklausieties vai ierakstiet vēlreiz",
+   samtykke:"Es piekrītu, ka mana balss tiek izmantota šī video izveidei.",
+   s3t:"Izvēlieties dziesmu",s3i:"Pieskarieties dziesmai, kuru vēlaties dziedāt.",hor:"Klausīties",stopp:"Apturēt",lagVideoen:"Izveidot video",
+   lasterHint:"Parasti tas aizņem mazāk par minūti.",
+   laster:["Klausāmies jūsu balsi…","Mācāmies dziesmu…","Ļaujam jums to dziedāt…","Atdzīvinām seju…","Gandrīz gatavs…"],
+   rt:"Tagad jūs dziedat!",ri:"Noskatieties video, lejupielādējiet to vai izveidojiet jaunu.",lastNed:"Lejupielādēt video",lagNy:"Izveidot jaunu video",
+   feilVideo:"Neizdevās izveidot video. Lūdzu, mēģiniet vēlreiz.",feilMik:"Neizdevās piekļūt mikrofonam. Pārbaudiet, vai pārlūkam ir atļauja to izmantot.",
+   feilSang:"Šai dziesmai vēl nav audio faila.",feilTjeneste:"Pakalpojums vēl nav iestatīts."},
+ lt:{velgSprak:"Pasirinkite kalbą",lesOpp:"Skaityti balsu",bakgrunn:"Fonas",steg:"{n} žingsnis iš 4",ferdig:"Baigta",
+   s1t:"Nufotografuokite",s1i:"Nusifotografuokite arba pasirinkite jau turimą nuotrauką. Žiūrėkite tiesiai į kamerą, veidas turi būti aiškiai matomas.",
+   taBilde:"Fotografuoti",velgBilder:"Pasirinkti iš mano nuotraukų",paaNytt:"Fotografuoti iš naujo",videre:"Toliau",tilbake:"Atgal",
+   s2t:"Įrašykite savo balsą",s2i:"Palieskite mikrofoną ir kalbėkite arba niūniuokite apie 20 sekundžių. Tada sukursime dainą jūsų balsu.",
+   mikStart:"Palieskite, kad pradėtumėte",mikStopp:"Palieskite, kad sustabdytumėte",mikFerdig:"Baigta — paklausykite arba įrašykite iš naujo",
+   samtykke:"Sutinku, kad mano balsas būtų naudojamas šiam vaizdo įrašui sukurti.",
+   s3t:"Pasirinkite dainą",s3i:"Palieskite dainą, kurią norite dainuoti.",hor:"Klausytis",stopp:"Stabdyti",lagVideoen:"Sukurti vaizdo įrašą",
+   lasterHint:"Paprastai tai trunka mažiau nei minutę.",
+   laster:["Klausomės jūsų balso…","Mokomės dainos…","Leidžiame jums ją dainuoti…","Atgaiviname veidą…","Beveik baigta…"],
+   rt:"Dabar jūs dainuojate!",ri:"Peržiūrėkite vaizdo įrašą, atsisiųskite jį arba sukurkite naują.",lastNed:"Atsisiųsti vaizdo įrašą",lagNy:"Sukurti naują vaizdo įrašą",
+   feilVideo:"Nepavyko sukurti vaizdo įrašo. Bandykite dar kartą.",feilMik:"Nepavyko pasiekti mikrofono. Patikrinkite, ar naršyklei leidžiama jį naudoti.",
+   feilSang:"Ši daina dar neturi garso failo.",feilTjeneste:"Paslauga dar nesukonfigūruota."}
+};
+
+/* ── Lagring (skjermet, brytes aldri) ─────────────────── */
+const LAGER = {
+  les:k=>{try{return localStorage.getItem(k);}catch(e){return null;}},
+  skriv:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}},
+  slett:k=>{try{localStorage.removeItem(k);}catch(e){}}
+};
+
+/* ── Tilstand ─────────────────────────────────────────── */
+let AKTIV = "no";
+let bildeBlob=null, stemmeBlob=null, valgtSang=null, mikTilstand="start";
+let mediaRecorder=null, opptakBiter=[], opptakTimer=null, sekunder=0;
+let forhandsLyd=null, spillerId=null;
+let lesPaa=false, startet=false;
+const BCP={no:"nb-NO",en:"en-US",de:"de-DE",fr:"fr-FR",es:"es-ES",it:"it-IT",ru:"ru-RU",ja:"ja-JP",zh:"zh-CN",pl:"pl-PL",lv:"lv-LV",lt:"lt-LT"};
+
+/* ── Oversettelse ─────────────────────────────────────── */
+function T(key, vars){
+  let s = (I18N[AKTIV] && I18N[AKTIV][key]);
+  if(s===undefined) s = I18N.no[key] || key;
+  if(vars) for(const k in vars) s = s.replace("{"+k+"}", vars[k]);
+  return s;
+}
+function settSprak(kode){
+  AKTIV = I18N[kode] ? kode : "no";
+  LAGER.skriv("sing_sprak", AKTIV);
+  document.documentElement.lang = AKTIV;
+  document.getElementById("sprak").value = AKTIV;
+  tegnOm();
+  if(startet && lesPaa) lesAktivt();
+}
+function tegnOm(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent = T(el.getAttribute("data-i18n")));
+  document.querySelectorAll("[data-steg]").forEach(el=>el.textContent = T("steg",{n:el.getAttribute("data-steg")}));
+  document.querySelectorAll("[data-i18n-aria]").forEach(el=>el.setAttribute("aria-label", T(el.getAttribute("data-i18n-aria"))));
+  const hintKey = mikTilstand==="stopp" ? "mikStopp" : mikTilstand==="ferdig" ? "mikFerdig" : "mikStart";
+  document.getElementById("mikHint").textContent = T(hintKey);
+  document.getElementById("mikknapp").setAttribute("aria-label", T(mikTilstand==="stopp"?"mikStopp":"mikStart"));
+  document.getElementById("bakgrunnKnapp").setAttribute("aria-label", T("bakgrunn"));
+  byggSanger();
+}
+
+/* ── Bakgrunnsbilde (familiebilder) ───────────────────── */
+function anvendBakteppe(data){
+  document.getElementById("bakteppe").style.backgroundImage =
+    `linear-gradient(rgba(10,22,15,.55), rgba(10,22,15,.72)), url(${data})`;
+  document.getElementById("fjernBakgrunn").classList.remove("skjult");
+}
+function fjernBakteppe(){
+  document.getElementById("bakteppe").style.backgroundImage = "";
+  document.getElementById("fjernBakgrunn").classList.add("skjult");
+  LAGER.slett("sing_bakgrunn");
+}
+async function velgBakteppe(input){
+  const fil=input.files[0]; if(!fil) return;
+  try{
+    const data = await bildeTilData(fil, 1280, 0.72);
+    anvendBakteppe(data);
+    LAGER.skriv("sing_bakgrunn", data);
+  }catch(e){ visFeil("Klarte ikke å bruke bildet som bakgrunn."); }
+  input.value="";
+}
+
+/* ── Steg-navigasjon ──────────────────────────────────── */
+function visSteg(n){
+  document.querySelectorAll(".steg").forEach(s=>s.classList.remove("aktiv"));
+  document.getElementById("steg"+n).classList.add("aktiv");
+  document.querySelectorAll("#fremdrift i").forEach((d,i)=>d.classList.toggle("paa", i < n));
+  skjulFeil(); etterStegbytte(); window.scrollTo({top:0,behavior:"smooth"});
+}
+function visSeksjon(id){
+  document.querySelectorAll(".steg").forEach(s=>s.classList.remove("aktiv"));
+  document.getElementById(id).classList.add("aktiv");
+  etterStegbytte();
+}
+
+/* ── Bilde ────────────────────────────────────────────── */
+function lastBilde(input){
+  const fil=input.files[0]; if(!fil) return;
+  bildeBlob=fil;
+  const vis=document.getElementById("fotoVis");
+  vis.src=URL.createObjectURL(fil); vis.classList.remove("skjult");
+  document.getElementById("fotoValg").classList.add("skjult");
+  document.getElementById("fotoKlar").classList.remove("skjult");
+}
+function nullstillFoto(){
+  bildeBlob=null;
+  document.getElementById("fotoVis").classList.add("skjult");
+  document.getElementById("fotoValg").classList.remove("skjult");
+  document.getElementById("fotoKlar").classList.add("skjult");
+  document.getElementById("kamera").value=""; document.getElementById("galleri").value="";
+}
+
+/* ── Stemmeopptak (MediaRecorder — virker i alle tre dører) ── */
+async function veksleOpptak(){
+  if(mediaRecorder && mediaRecorder.state==="recording"){ stoppOpptak(); return; }
+  try{
+    const strom=await navigator.mediaDevices.getUserMedia({audio:true});
+    opptakBiter=[];
+    mediaRecorder=new MediaRecorder(strom);
+    mediaRecorder.ondataavailable=e=>opptakBiter.push(e.data);
+    mediaRecorder.onstop=()=>{
+      strom.getTracks().forEach(t=>t.stop());
+      stemmeBlob=new Blob(opptakBiter,{type:mediaRecorder.mimeType||"audio/webm"});
+      const a=document.getElementById("stemmeVis");
+      a.src=URL.createObjectURL(stemmeBlob); a.classList.remove("skjult");
+      oppdaterSteg2();
+    };
+    mediaRecorder.start();
+    sekunder=0; oppdaterTimer();
+    opptakTimer=setInterval(()=>{ sekunder++; oppdaterTimer(); if(sekunder>=30) stoppOpptak(); },1000);
+    mikTilstand="stopp";
+    document.getElementById("mikknapp").classList.add("tar-opp");
+    document.getElementById("mikknapp").setAttribute("aria-label", T("mikStopp"));
+    document.getElementById("mikIkon").innerHTML='<rect x="6" y="6" width="12" height="12" rx="2"/>';
+    document.getElementById("mikHint").textContent=T("mikStopp");
+    lesOpp(T("mikStopp"));
+  }catch(e){ visFeil(T("feilMik")); }
+}
+function stoppOpptak(){
+  if(mediaRecorder && mediaRecorder.state==="recording") mediaRecorder.stop();
+  clearInterval(opptakTimer);
+  mikTilstand="ferdig";
+  document.getElementById("mikknapp").classList.remove("tar-opp");
+  document.getElementById("mikknapp").setAttribute("aria-label", T("mikStart"));
+  document.getElementById("mikIkon").innerHTML='<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>';
+  document.getElementById("mikHint").textContent=T("mikFerdig");
+  lesOpp(T("mikFerdig"));
+}
+function oppdaterTimer(){
+  const m=Math.floor(sekunder/60), s=String(sekunder%60).padStart(2,"0");
+  document.getElementById("timer").textContent=m+":"+s;
+}
+function oppdaterSteg2(){
+  document.getElementById("steg2videre").disabled = false; // v1: opptak ikke påkrevd
+}
+
+/* ── Sangvalg ─────────────────────────────────────────── */
+const IKON_PLAY='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+const IKON_STOPP='<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+function byggSanger(){
+  const boks=document.getElementById("sanger"); boks.innerHTML="";
+  SANGER.forEach(sang=>{
+    const kort=document.createElement("div");
+    kort.className="sang"; kort.tabIndex=0; kort.setAttribute("role","button");
+    if(valgtSang && valgtSang.id===sang.id) kort.classList.add("valgt");
+    kort.innerHTML=`
+      <span class="sang__ikon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+      <span class="sang__navn"><div>${sang.tittel}</div><div class="sang__meta">${sang.meta}</div></span>
+      <button class="horknapp" type="button" aria-label="${T("hor")} ${sang.tittel}">${IKON_PLAY}<span class="horknapp__tekst">${T("hor")}</span></button>`;
+    const velg=()=>velgSang(sang, kort);
+    kort.addEventListener("click", velg);
+    kort.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); velg(); }});
+    kort.querySelector(".horknapp").addEventListener("click", e=>{ e.stopPropagation(); forhandsvis(sang, kort.querySelector(".horknapp")); });
+    boks.appendChild(kort);
+  });
+}
+function forhandsvis(sang, knapp){
+  if(!sang.url){ visFeil(T("feilSang")); return; }
+  const spillerNaa = forhandsLyd && spillerId===sang.id && !forhandsLyd.paused;
+  stoppForhands();
+  if(spillerNaa) return;
+  forhandsLyd=new Audio(sang.url); spillerId=sang.id;
+  knapp.classList.add("spiller");
+  knapp.querySelector(".horknapp__tekst").textContent=T("stopp");
+  knapp.querySelector("svg").outerHTML=IKON_STOPP;
+  forhandsLyd.play().catch(()=>{ visFeil(T("feilSang")); stoppForhands(); });
+  forhandsLyd.onended=stoppForhands;
+}
+function stoppForhands(){
+  if(forhandsLyd){ forhandsLyd.pause(); forhandsLyd=null; }
+  spillerId=null;
+  document.querySelectorAll(".horknapp").forEach(k=>{
+    k.classList.remove("spiller");
+    k.querySelector(".horknapp__tekst").textContent=T("hor");
+    k.querySelector("svg").outerHTML=IKON_PLAY;
+  });
+}
+function velgSang(sang, el){
+  valgtSang=sang;
+  document.querySelectorAll(".sang").forEach(s=>s.classList.remove("valgt"));
+  el.classList.add("valgt");
+  document.getElementById("lagKnapp").disabled=false;
+  lesOpp(sang.tittel); kunngjor(sang.tittel);
+}
+
+/* ── Hjelpere ─────────────────────────────────────────── */
+function blobTilData(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(blob);});}
+function lastBildeEl(blob){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(blob);});}
+async function bildeTilData(blob, maks=1024, q=0.85){
+  const b=await lastBildeEl(blob);
+  const s=Math.min(1,maks/Math.max(b.width,b.height));
+  const c=document.createElement("canvas"); c.width=Math.round(b.width*s); c.height=Math.round(b.height*s);
+  c.getContext("2d").drawImage(b,0,0,c.width,c.height);
+  return c.toDataURL("image/jpeg",q);
+}
+
+/* ── Lag video (async + polling, ingen lagring) ───────── */
+let lasteTimer=null;
+function startLaster(){
+  const arr = (I18N[AKTIV] && I18N[AKTIV].laster) || I18N.no.laster;
+  let i=0; const el=document.getElementById("lasterTekst");
+  el.textContent=arr[0];
+  lasteTimer=setInterval(()=>{ i=(i+1)%arr.length; el.textContent=arr[i]; },4000);
+}
+async function kall(action, body){
+  const r=await fetch(`${TJENESTE}?action=${action}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+  const d=await r.json(); if(!r.ok||d.error) throw new Error(d.error||"feil"); return d;
+}
+async function vent(action, id){
+  for(let i=0;i<150;i++){
+    const d=await kall(action,{id});
+    if(d.status==="done") return d;
+    if(d.status==="error") throw new Error(d.error||"feil");
+    await new Promise(r=>setTimeout(r,2000));
+  }
+  throw new Error("timeout");
+}
+async function lagVideo(){
+  if(!bildeBlob || !valgtSang) return;
+  stoppForhands();
+  if(!valgtSang.url){ visFeil(T("feilSang")); return; }
+  if(TJENESTE.includes("DIN-TJENESTE-APP")){ visFeil(T("feilTjeneste")); return; }
+
+  visSeksjon("steg4"); startLaster();
+  try{
+    // v1: bilde + sang rett til OmniHuman (stemmekloning kommer i v2)
+    const bildeData=await bildeTilData(bildeBlob, 1024, 0.85);
+    const vid=await kall("startVideo",{ bilde: bildeData, audioUrl: valgtSang.url });
+    const { videoUrl }=await vent("pollVideo", vid.id);
+
+    const blob=await (await fetch(videoUrl)).blob();
+    const lokal=URL.createObjectURL(blob);
+    clearInterval(lasteTimer);
+    document.getElementById("resultatVideo").src=lokal;
+    document.getElementById("lastNed").href=lokal;
+    visSeksjon("stegFerdig");
+  }catch(e){
+    clearInterval(lasteTimer);
+    console.error(e);
+    visSeksjon("steg3");
+    visFeil(T("feilVideo"));
+  }
+}
+function startPaaNytt(){
+  stoppForhands();
+  nullstillFoto(); stemmeBlob=null; valgtSang=null; mikTilstand="start";
+  document.getElementById("stemmeVis").classList.add("skjult");
+  document.getElementById("samtykke").checked=false;
+  document.getElementById("timer").textContent="0:00";
+  document.getElementById("mikHint").textContent=T("mikStart");
+  document.getElementById("lagKnapp").disabled=true;
+  oppdaterSteg2(); visSteg(1);
+}
+
+/* ── Opplesing (speechSynthesis — virker i alle tre dører) ── */
+function velgStemme(kode){
+  try{
+    const full=(BCP[kode]||"en-US").toLowerCase(), kort=full.slice(0,2);
+    const v=speechSynthesis.getVoices();
+    return v.find(x=>x.lang.toLowerCase().startsWith(full)) || v.find(x=>x.lang.toLowerCase().startsWith(kort)) || null;
+  }catch(e){ return null; }
+}
+function lesOpp(tekst){
+  if(!lesPaa || !tekst) return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(tekst);
+    u.lang=BCP[AKTIV]||"en-US"; u.rate=.95;
+    const v=velgStemme(AKTIV); if(v) u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function lesAktivt(){
+  const s=document.querySelector(".steg.aktiv"); if(!s) return;
+  const deler=[];
+  const h=s.querySelector("h2"); if(h) deler.push(h.textContent);
+  const i=s.querySelector(".ingress"); if(i) deler.push(i.textContent);
+  const mh=s.querySelector("#mikHint"); if(mh && mh.textContent) deler.push(mh.textContent);
+  lesOpp(deler.join(". "));
+}
+function kunngjor(tekst){ const l=document.getElementById("live"); if(l) l.textContent=tekst||""; }
+function etterStegbytte(){
+  const s=document.querySelector(".steg.aktiv"); if(!s) return;
+  const h=s.querySelector("h2");
+  if(h){ h.setAttribute("tabindex","-1"); if(startet) h.focus({preventScroll:true}); kunngjor(h.textContent); }
+  if(startet) lesAktivt();
+}
+function veksleLes(){
+  lesPaa=!lesPaa;
+  LAGER.skriv("sing_les", lesPaa?"1":"0");
+  const b=document.getElementById("lesKnapp");
+  b.classList.toggle("aktiv", lesPaa);
+  b.setAttribute("aria-pressed", lesPaa?"true":"false");
+  if(lesPaa) lesAktivt(); else { try{ speechSynthesis.cancel(); }catch(e){} }
+}
+
+/* ── Feil ─────────────────────────────────────────────── */
+function visFeil(t){const f=document.getElementById("feil");f.textContent=t;f.classList.remove("skjult");kunngjor(t);lesOpp(t);}
+function skjulFeil(){document.getElementById("feil").classList.add("skjult");}
+
+/* ── Start ────────────────────────────────────────────── */
+(function(){
+  const velger=document.getElementById("sprak");
+  SPRAK.forEach(([kode,navn])=>{ const o=document.createElement("option"); o.value=kode; o.textContent=navn; velger.appendChild(o); });
+  document.getElementById("bakgrunnInputWrap") || (function(){
+    const inp=document.createElement("input");
+    inp.type="file"; inp.accept="image/*"; inp.id="bakgrunnInput"; inp.style.display="none";
+    inp.addEventListener("change",()=>velgBakteppe(inp));
+    document.body.appendChild(inp);
+  })();
+  const lagret=LAGER.les("sing_bakgrunn"); if(lagret) anvendBakteppe(lagret);
+
+  lesPaa = LAGER.les("sing_les")==="1";
+  const lb=document.getElementById("lesKnapp");
+  lb.classList.toggle("aktiv", lesPaa); lb.setAttribute("aria-pressed", lesPaa?"true":"false");
+  try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){}
+
+  settSprak(LAGER.les("sing_sprak") || (navigator.language||"no").slice(0,2));
+  visSteg(1);
+  startet=true;
+})();
+</script>
+</body>
+</html>
