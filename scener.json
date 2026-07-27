@@ -1,14 +1,14 @@
 [
-  { "id": "sommer", "navn": "Sommerfjord",      "fil": "scener/sommer.jpg",
+  { "id": "sommer", "navn": "Sommerfjord",      "fil":sommer.jpg",
     "skilt":  { "x1": 0.245, "y1": 0.470, "x2": 0.755, "y2": 0.635 },
     "person": { "cx": 0.50, "topp": 0.16, "maksBredde": 0.62 } },
-  { "id": "vinter", "navn": "Vinter og nordlys", "fil": "scener/vinter.jpg",
+  { "id": "vinter", "navn": "Vinter og nordlys", "fil":vinter.jpg",
     "skilt":  { "x1": 0.245, "y1": 0.480, "x2": 0.760, "y2": 0.650 },
     "person": { "cx": 0.50, "topp": 0.17, "maksBredde": 0.62 } },
-  { "id": "host",   "navn": "Høst ved vannet",   "fil": "scener/host.jpg",
+  { "id": "host",   "navn": "Høst ved vannet",   "fil":host.jpg",
     "skilt":  { "x1": 0.240, "y1": 0.465, "x2": 0.755, "y2": 0.635 },
     "person": { "cx": 0.50, "topp": 0.16, "maksBredde": 0.62 } },
-  { "id": "jul",    "navn": "Julekveld",         "fil": "scener/jul.jpg",
+  { "id": "jul",    "navn": "Julekveld",         "fil":jul.jpg",
     "skilt":  { "x1": 0.245, "y1": 0.470, "x2": 0.755, "y2": 0.645 },
     "person": { "cx": 0.50, "topp": 0.17, "maksBredde": 0.62 } }
 ]
