@@ -1,0 +1,10 @@
+[
+  { "id": "haugen",     "tittel": "Sangen om Haugen",              "meta": "Egenlaget", "anledning": "Egne sanger",  "fil": "sangen-om-haugen.mp3" },
+
+  { "id": "bursdag70",  "tittel": "Gratulerer med 70-årsdagen",    "meta": "Bursdag",   "anledning": "Bursdag",      "fil": "bursdag-70.mp3" },
+  { "id": "bursdag80",  "tittel": "Gratulerer med 80-årsdagen",    "meta": "Bursdag",   "anledning": "Bursdag",      "fil": "bursdag-80.mp3" },
+
+  { "id": "gull",       "tittel": "Gratulerer med gullbryllupet",  "meta": "50 år",     "anledning": "Bryllupsdag",  "fil": "gullbryllup.mp3" },
+
+  { "id": "godbedring", "tittel": "God bedring",                   "meta": "Omtanke",   "anledning": "God bedring",  "fil": "god-bedring.mp3" }
+]

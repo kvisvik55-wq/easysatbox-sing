@@ -114,6 +114,7 @@
   .samtykke label{cursor:pointer}
 
   .sanger{display:grid;gap:12px;margin-bottom:8px}
+  .anledninger{display:grid;gap:12px;margin-bottom:8px}
   .sang{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
     background:#fff;border:3px solid #e6ddc4;border-radius:16px;padding:16px 18px;
     font-family:'Nunito';font-size:19px;font-weight:700;color:var(--tekst);transition:border-color .15s,background .15s}
@@ -226,12 +227,26 @@
 
     <section class="steg" id="steg3">
       <div class="eyebrow" data-steg="3"></div>
-      <h2 data-i18n="s3t"></h2>
-      <p class="ingress" data-i18n="s3i"></p>
-      <div class="sanger" id="sanger"></div>
-      <div class="rad">
-        <button class="knapp" data-i18n="tilbake" onclick="visSteg(2)"></button>
-        <button class="knapp knapp--gull knapp--stor" id="lagKnapp" data-i18n="lagVideoen" onclick="lagVideo()" disabled></button>
+
+      <!-- 3a: Hva feirer du? -->
+      <div id="anledningView">
+        <h2 data-i18n="hvaFeirer"></h2>
+        <p class="ingress" data-i18n="hvaFeirerIngress"></p>
+        <div class="anledninger" id="anledninger"></div>
+        <div class="rad">
+          <button class="knapp" data-i18n="tilbake" onclick="visSteg(2)"></button>
+        </div>
+      </div>
+
+      <!-- 3b: Velg en sang -->
+      <div id="sangView" class="skjult">
+        <h2 data-i18n="s3t"></h2>
+        <p class="ingress" data-i18n="s3i"></p>
+        <div class="sanger" id="sanger"></div>
+        <div class="rad">
+          <button class="knapp" data-i18n="andreAnledninger" onclick="visAnledninger()"></button>
+          <button class="knapp knapp--gull knapp--stor" id="lagKnapp" data-i18n="lagVideoen" onclick="lagVideo()" disabled></button>
+        </div>
       </div>
     </section>
 
@@ -262,12 +277,24 @@
    ══════════════════════════════════════════════════════════ */
 const TJENESTE = "https://easysatbox-photoenhancer.netlify.app/.netlify/functions/sing";
 
-/* Sangbibliotek — dine egne songer.no-klipp (ca. 8 sek), url = direkte lenke */
-const SANGER = [
-  { id:"haugen", tittel:"Sangen om Haugen", meta:"Egenlaget", url:"https://easysatbox-sing.netlify.app/sangen-om-haugen.mp3" },
-  { id:"vise2", tittel:"Kjærlighet fra Gud",  meta:"Salme",        url:"" },
-  { id:"vise3", tittel:"Sommervise",          meta:"Glad og lett", url:"" },
+/* Sangbibliotek lastes fra sanger.json (ligger ved siden av index.html).
+   Ny sang = én linje i sanger.json + last opp mp3-en. Ingen kodeendring. */
+let SANGER = [];
+const STANDARD_SANGER = [
+  { id:"haugen", tittel:"Sangen om Haugen", meta:"Egenlaget", anledning:"Egne sanger", fil:"sangen-om-haugen.mp3" }
 ];
+async function lastSanger(){
+  let data = STANDARD_SANGER;
+  try{
+    const r = await fetch("sanger.json", { cache:"no-store" });
+    if(r.ok){ const j = await r.json(); if(Array.isArray(j) && j.length) data = j; }
+  }catch(e){}
+  SANGER = data.map(s => ({
+    ...s,
+    anledning: s.anledning || "Sanger",
+    url: s.fil ? new URL(s.fil, location.href).href : (s.url || "")
+  }));
+}
 
 /* ── Språk (12, som Photo Enhancer) ───────────────────── */
 const SPRAK = [["no","Norsk"],["en","English"],["de","Deutsch"],["fr","Français"],["es","Español"],
@@ -280,7 +307,7 @@ const I18N = {
    s2t:"Spill inn stemmen din",s2i:"Trykk på mikrofonen og snakk eller nynn i cirka 20 sekunder. Da lager vi sangen med akkurat din stemme.",
    mikStart:"Trykk for å starte",mikStopp:"Trykk for å stoppe",mikFerdig:"Ferdig — hør gjerne på det, eller ta opp på nytt",
    samtykke:"Jeg godtar at min egen stemme brukes til å lage denne videoen.",
-   s3t:"Velg en sang",s3i:"Trykk på sangen du vil synge.",hor:"Hør",stopp:"Stopp",lagVideoen:"Lag videoen",
+   s3t:"Velg en sang",s3i:"Trykk på sangen du vil synge.",hvaFeirer:"Hva feirer du?",hvaFeirerIngress:"Trykk på anledningen.",andreAnledninger:"Andre anledninger",hor:"Hør",stopp:"Stopp",lagVideoen:"Lag videoen",
    lasterHint:"Dette tar vanligvis under ett minutt.",
    laster:["Hører på stemmen din…","Lærer sangen…","Lar deg synge den…","Setter ansiktet i bevegelse…","Nesten ferdig…"],
    rt:"Nå synger du!",ri:"Se videoen, last den ned eller lag en ny.",lastNed:"Last ned videoen",lagNy:"Lag en ny video",
@@ -292,7 +319,7 @@ const I18N = {
    s2t:"Record your voice",s2i:"Tap the microphone and talk or hum for about 20 seconds. Then we make the song in your own voice.",
    mikStart:"Tap to start",mikStopp:"Tap to stop",mikFerdig:"Done — have a listen, or record again",
    samtykke:"I agree that my own voice is used to make this video.",
-   s3t:"Choose a song",s3i:"Tap the song you want to sing.",hor:"Listen",stopp:"Stop",lagVideoen:"Make the video",
+   s3t:"Choose a song",s3i:"Tap the song you want to sing.",hvaFeirer:"What are you celebrating?",hvaFeirerIngress:"Tap the occasion.",andreAnledninger:"Other occasions",hor:"Listen",stopp:"Stop",lagVideoen:"Make the video",
    lasterHint:"This usually takes under a minute.",
    laster:["Listening to your voice…","Learning the song…","Letting you sing it…","Bringing the face to life…","Almost done…"],
    rt:"Now you're singing!",ri:"Watch the video, download it or make a new one.",lastNed:"Download the video",lagNy:"Make a new video",
@@ -304,7 +331,7 @@ const I18N = {
    s2t:"Nimm deine Stimme auf",s2i:"Tippe auf das Mikrofon und sprich oder summe etwa 20 Sekunden. Dann erstellen wir das Lied mit deiner eigenen Stimme.",
    mikStart:"Zum Starten tippen",mikStopp:"Zum Stoppen tippen",mikFerdig:"Fertig — hör es dir an oder nimm neu auf",
    samtykke:"Ich stimme zu, dass meine eigene Stimme für dieses Video verwendet wird.",
-   s3t:"Wähle ein Lied",s3i:"Tippe auf das Lied, das du singen möchtest.",hor:"Anhören",stopp:"Stopp",lagVideoen:"Video erstellen",
+   s3t:"Wähle ein Lied",s3i:"Tippe auf das Lied, das du singen möchtest.",hvaFeirer:"Was feierst du?",hvaFeirerIngress:"Tippe auf den Anlass.",andreAnledninger:"Andere Anlässe",hor:"Anhören",stopp:"Stopp",lagVideoen:"Video erstellen",
    lasterHint:"Das dauert meist unter einer Minute.",
    laster:["Deine Stimme wird gehört…","Das Lied wird gelernt…","Du darfst es singen…","Das Gesicht wird lebendig…","Fast fertig…"],
    rt:"Jetzt singst du!",ri:"Sieh dir das Video an, lade es herunter oder erstelle ein neues.",lastNed:"Video herunterladen",lagNy:"Neues Video erstellen",
@@ -316,7 +343,7 @@ const I18N = {
    s2t:"Enregistrez votre voix",s2i:"Touchez le micro et parlez ou fredonnez environ 20 secondes. Nous créons alors la chanson avec votre propre voix.",
    mikStart:"Touchez pour démarrer",mikStopp:"Touchez pour arrêter",mikFerdig:"Terminé — écoutez, ou réenregistrez",
    samtykke:"J'accepte que ma propre voix soit utilisée pour créer cette vidéo.",
-   s3t:"Choisissez une chanson",s3i:"Touchez la chanson que vous voulez chanter.",hor:"Écouter",stopp:"Arrêter",lagVideoen:"Créer la vidéo",
+   s3t:"Choisissez une chanson",s3i:"Touchez la chanson que vous voulez chanter.",hvaFeirer:"Que fêtez-vous ?",hvaFeirerIngress:"Touchez l'occasion.",andreAnledninger:"Autres occasions",hor:"Écouter",stopp:"Arrêter",lagVideoen:"Créer la vidéo",
    lasterHint:"Cela prend généralement moins d'une minute.",
    laster:["On écoute votre voix…","On apprend la chanson…","On vous fait chanter…","On anime le visage…","Presque terminé…"],
    rt:"Vous chantez maintenant !",ri:"Regardez la vidéo, téléchargez-la ou créez-en une nouvelle.",lastNed:"Télécharger la vidéo",lagNy:"Créer une nouvelle vidéo",
@@ -328,7 +355,7 @@ const I18N = {
    s2t:"Graba tu voz",s2i:"Toca el micrófono y habla o tararea unos 20 segundos. Así creamos la canción con tu propia voz.",
    mikStart:"Toca para empezar",mikStopp:"Toca para detener",mikFerdig:"Listo — escúchalo o graba de nuevo",
    samtykke:"Acepto que se use mi propia voz para crear este vídeo.",
-   s3t:"Elige una canción",s3i:"Toca la canción que quieres cantar.",hor:"Escuchar",stopp:"Detener",lagVideoen:"Crear el vídeo",
+   s3t:"Elige una canción",s3i:"Toca la canción que quieres cantar.",hvaFeirer:"¿Qué celebras?",hvaFeirerIngress:"Toca la ocasión.",andreAnledninger:"Otras ocasiones",hor:"Escuchar",stopp:"Detener",lagVideoen:"Crear el vídeo",
    lasterHint:"Esto suele tardar menos de un minuto.",
    laster:["Escuchando tu voz…","Aprendiendo la canción…","Dejándote cantarla…","Dando vida a la cara…","Casi listo…"],
    rt:"¡Ahora estás cantando!",ri:"Mira el vídeo, descárgalo o crea uno nuevo.",lastNed:"Descargar el vídeo",lagNy:"Crear un vídeo nuevo",
@@ -340,7 +367,7 @@ const I18N = {
    s2t:"Registra la tua voce",s2i:"Tocca il microfono e parla o canticchia per circa 20 secondi. Così creiamo la canzone con la tua voce.",
    mikStart:"Tocca per iniziare",mikStopp:"Tocca per fermare",mikFerdig:"Fatto — ascolta, o registra di nuovo",
    samtykke:"Acconsento all'uso della mia voce per creare questo video.",
-   s3t:"Scegli una canzone",s3i:"Tocca la canzone che vuoi cantare.",hor:"Ascolta",stopp:"Ferma",lagVideoen:"Crea il video",
+   s3t:"Scegli una canzone",s3i:"Tocca la canzone che vuoi cantare.",hvaFeirer:"Cosa festeggi?",hvaFeirerIngress:"Tocca l'occasione.",andreAnledninger:"Altre occasioni",hor:"Ascolta",stopp:"Ferma",lagVideoen:"Crea il video",
    lasterHint:"Di solito ci vuole meno di un minuto.",
    laster:["Ascoltiamo la tua voce…","Impariamo la canzone…","Ti facciamo cantare…","Diamo vita al viso…","Quasi fatto…"],
    rt:"Ora stai cantando!",ri:"Guarda il video, scaricalo o creane uno nuovo.",lastNed:"Scarica il video",lagNy:"Crea un nuovo video",
@@ -352,7 +379,7 @@ const I18N = {
    s2t:"Запишите свой голос",s2i:"Нажмите на микрофон и говорите или напевайте около 20 секунд. Тогда мы создадим песню вашим голосом.",
    mikStart:"Нажмите, чтобы начать",mikStopp:"Нажмите, чтобы остановить",mikFerdig:"Готово — послушайте или запишите заново",
    samtykke:"Я согласен(на), что мой голос используется для создания этого видео.",
-   s3t:"Выберите песню",s3i:"Нажмите на песню, которую хотите спеть.",hor:"Слушать",stopp:"Стоп",lagVideoen:"Создать видео",
+   s3t:"Выберите песню",s3i:"Нажмите на песню, которую хотите спеть.",hvaFeirer:"Что вы празднуете?",hvaFeirerIngress:"Нажмите на повод.",andreAnledninger:"Другие поводы",hor:"Слушать",stopp:"Стоп",lagVideoen:"Создать видео",
    lasterHint:"Обычно это занимает меньше минуты.",
    laster:["Слушаем ваш голос…","Разучиваем песню…","Даём вам спеть…","Оживляем лицо…","Почти готово…"],
    rt:"Теперь вы поёте!",ri:"Посмотрите видео, скачайте его или создайте новое.",lastNed:"Скачать видео",lagNy:"Создать новое видео",
@@ -364,7 +391,7 @@ const I18N = {
    s2t:"声を録音する",s2i:"マイクをタップして、約20秒間話すか口ずさんでください。あなたの声で歌を作ります。",
    mikStart:"タップして開始",mikStopp:"タップして停止",mikFerdig:"完了 — 聞いてみるか、録音し直せます",
    samtykke:"この動画の作成に自分の声を使うことに同意します。",
-   s3t:"曲を選ぶ",s3i:"歌いたい曲をタップしてください。",hor:"聞く",stopp:"停止",lagVideoen:"動画を作る",
+   s3t:"曲を選ぶ",s3i:"歌いたい曲をタップしてください。",hvaFeirer:"お祝いはなんですか？",hvaFeirerIngress:"行事をタップしてください。",andreAnledninger:"ほかの行事",hor:"聞く",stopp:"停止",lagVideoen:"動画を作る",
    lasterHint:"通常は1分以内で終わります。",
    laster:["あなたの声を聞いています…","曲を覚えています…","あなたに歌わせています…","顔を動かしています…","もうすぐ完成…"],
    rt:"あなたが歌っています！",ri:"動画を見て、ダウンロードするか、新しく作りましょう。",lastNed:"動画をダウンロード",lagNy:"新しい動画を作る",
@@ -376,7 +403,7 @@ const I18N = {
    s2t:"录下你的声音",s2i:"点击麦克风，说话或哼唱约20秒。我们就用你自己的声音来做这首歌。",
    mikStart:"点击开始",mikStopp:"点击停止",mikFerdig:"完成 — 可以听听，或重新录制",
    samtykke:"我同意使用我自己的声音来制作这个视频。",
-   s3t:"选择一首歌",s3i:"点击你想唱的歌。",hor:"试听",stopp:"停止",lagVideoen:"制作视频",
+   s3t:"选择一首歌",s3i:"点击你想唱的歌。",hvaFeirer:"你在庆祝什么？",hvaFeirerIngress:"点击场合。",andreAnledninger:"其他场合",hor:"试听",stopp:"停止",lagVideoen:"制作视频",
    lasterHint:"通常不到一分钟。",
    laster:["正在聆听你的声音…","正在学习这首歌…","让你来唱…","让面部动起来…","即将完成…"],
    rt:"现在你在唱歌了！",ri:"观看视频，下载它，或再做一个。",lastNed:"下载视频",lagNy:"制作新视频",
@@ -388,7 +415,7 @@ const I18N = {
    s2t:"Nagraj swój głos",s2i:"Dotknij mikrofonu i mów lub nuć przez około 20 sekund. Wtedy stworzymy piosenkę Twoim głosem.",
    mikStart:"Dotknij, aby rozpocząć",mikStopp:"Dotknij, aby zatrzymać",mikFerdig:"Gotowe — posłuchaj lub nagraj ponownie",
    samtykke:"Zgadzam się, aby mój głos został użyty do stworzenia tego filmu.",
-   s3t:"Wybierz piosenkę",s3i:"Dotknij piosenki, którą chcesz zaśpiewać.",hor:"Posłuchaj",stopp:"Zatrzymaj",lagVideoen:"Utwórz film",
+   s3t:"Wybierz piosenkę",s3i:"Dotknij piosenki, którą chcesz zaśpiewać.",hvaFeirer:"Co świętujesz?",hvaFeirerIngress:"Dotknij okazji.",andreAnledninger:"Inne okazje",hor:"Posłuchaj",stopp:"Zatrzymaj",lagVideoen:"Utwórz film",
    lasterHint:"Zwykle trwa to krócej niż minutę.",
    laster:["Słuchamy Twojego głosu…","Uczymy się piosenki…","Pozwalamy Ci ją zaśpiewać…","Ożywiamy twarz…","Prawie gotowe…"],
    rt:"Teraz śpiewasz!",ri:"Obejrzyj film, pobierz go lub utwórz nowy.",lastNed:"Pobierz film",lagNy:"Utwórz nowy film",
@@ -400,7 +427,7 @@ const I18N = {
    s2t:"Ierakstiet savu balsi",s2i:"Pieskarieties mikrofonam un runājiet vai dungojiet apmēram 20 sekundes. Tad izveidosim dziesmu ar jūsu balsi.",
    mikStart:"Pieskarieties, lai sāktu",mikStopp:"Pieskarieties, lai apturētu",mikFerdig:"Gatavs — noklausieties vai ierakstiet vēlreiz",
    samtykke:"Es piekrītu, ka mana balss tiek izmantota šī video izveidei.",
-   s3t:"Izvēlieties dziesmu",s3i:"Pieskarieties dziesmai, kuru vēlaties dziedāt.",hor:"Klausīties",stopp:"Apturēt",lagVideoen:"Izveidot video",
+   s3t:"Izvēlieties dziesmu",s3i:"Pieskarieties dziesmai, kuru vēlaties dziedāt.",hvaFeirer:"Ko jūs svinat?",hvaFeirerIngress:"Pieskarieties gadījumam.",andreAnledninger:"Citi gadījumi",hor:"Klausīties",stopp:"Apturēt",lagVideoen:"Izveidot video",
    lasterHint:"Parasti tas aizņem mazāk par minūti.",
    laster:["Klausāmies jūsu balsi…","Mācāmies dziesmu…","Ļaujam jums to dziedāt…","Atdzīvinām seju…","Gandrīz gatavs…"],
    rt:"Tagad jūs dziedat!",ri:"Noskatieties video, lejupielādējiet to vai izveidojiet jaunu.",lastNed:"Lejupielādēt video",lagNy:"Izveidot jaunu video",
@@ -412,7 +439,7 @@ const I18N = {
    s2t:"Įrašykite savo balsą",s2i:"Palieskite mikrofoną ir kalbėkite arba niūniuokite apie 20 sekundžių. Tada sukursime dainą jūsų balsu.",
    mikStart:"Palieskite, kad pradėtumėte",mikStopp:"Palieskite, kad sustabdytumėte",mikFerdig:"Baigta — paklausykite arba įrašykite iš naujo",
    samtykke:"Sutinku, kad mano balsas būtų naudojamas šiam vaizdo įrašui sukurti.",
-   s3t:"Pasirinkite dainą",s3i:"Palieskite dainą, kurią norite dainuoti.",hor:"Klausytis",stopp:"Stabdyti",lagVideoen:"Sukurti vaizdo įrašą",
+   s3t:"Pasirinkite dainą",s3i:"Palieskite dainą, kurią norite dainuoti.",hvaFeirer:"Ką švenčiate?",hvaFeirerIngress:"Palieskite progą.",andreAnledninger:"Kitos progos",hor:"Klausytis",stopp:"Stabdyti",lagVideoen:"Sukurti vaizdo įrašą",
    lasterHint:"Paprastai tai trunka mažiau nei minutę.",
    laster:["Klausomės jūsų balso…","Mokomės dainos…","Leidžiame jums ją dainuoti…","Atgaiviname veidą…","Beveik baigta…"],
    rt:"Dabar jūs dainuojate!",ri:"Peržiūrėkite vaizdo įrašą, atsisiųskite jį arba sukurkite naują.",lastNed:"Atsisiųsti vaizdo įrašą",lagNy:"Sukurti naują vaizdo įrašą",
@@ -429,7 +456,7 @@ const LAGER = {
 
 /* ── Tilstand ─────────────────────────────────────────── */
 let AKTIV = "no";
-let bildeBlob=null, stemmeBlob=null, valgtSang=null, mikTilstand="start";
+let bildeBlob=null, stemmeBlob=null, valgtSang=null, valgtAnledning=null, mikTilstand="start";
 let mediaRecorder=null, opptakBiter=[], opptakTimer=null, sekunder=0;
 let forhandsLyd=null, spillerId=null;
 let lesPaa=false, startet=false;
@@ -458,7 +485,7 @@ function tegnOm(){
   document.getElementById("mikHint").textContent = T(hintKey);
   document.getElementById("mikknapp").setAttribute("aria-label", T(mikTilstand==="stopp"?"mikStopp":"mikStart"));
   document.getElementById("bakgrunnKnapp").setAttribute("aria-label", T("bakgrunn"));
-  byggSanger();
+  byggAnledninger(); byggSanger();
 }
 
 /* ── Bakgrunnsbilde (familiebilder) ───────────────────── */
@@ -487,7 +514,9 @@ function visSteg(n){
   document.querySelectorAll(".steg").forEach(s=>s.classList.remove("aktiv"));
   document.getElementById("steg"+n).classList.add("aktiv");
   document.querySelectorAll("#fremdrift i").forEach((d,i)=>d.classList.toggle("paa", i < n));
-  skjulFeil(); etterStegbytte(); window.scrollTo({top:0,behavior:"smooth"});
+  skjulFeil();
+  if(n===3) visAnledninger(); else etterStegbytte();
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 function visSeksjon(id){
   document.querySelectorAll(".steg").forEach(s=>s.classList.remove("aktiv"));
@@ -559,15 +588,46 @@ function oppdaterSteg2(){
 /* ── Sangvalg ─────────────────────────────────────────── */
 const IKON_PLAY='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
 const IKON_STOPP='<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+/* ── Anledninger ──────────────────────────────────────── */
+function anledningsListe(){
+  const sett=[]; SANGER.forEach(s=>{ if(!sett.includes(s.anledning)) sett.push(s.anledning); }); return sett;
+}
+function byggAnledninger(){
+  const boks=document.getElementById("anledninger"); if(!boks) return; boks.innerHTML="";
+  anledningsListe().forEach(a=>{
+    const b=document.createElement("button");
+    b.className="knapp"; b.type="button"; b.textContent=a;
+    b.onclick=()=>velgAnledning(a);
+    boks.appendChild(b);
+  });
+}
+function velgAnledning(a){
+  valgtAnledning=a; valgtSang=null;
+  document.getElementById("lagKnapp").disabled=true;
+  byggSanger();
+  document.getElementById("anledningView").classList.add("skjult");
+  document.getElementById("sangView").classList.remove("skjult");
+  etterStegbytte();
+}
+function visAnledninger(){
+  stoppForhands();
+  valgtAnledning=null; valgtSang=null;
+  document.getElementById("lagKnapp").disabled=true;
+  document.getElementById("sangView").classList.add("skjult");
+  document.getElementById("anledningView").classList.remove("skjult");
+  byggAnledninger();
+  etterStegbytte();
+}
+
 function byggSanger(){
-  const boks=document.getElementById("sanger"); boks.innerHTML="";
-  SANGER.forEach(sang=>{
+  const boks=document.getElementById("sanger"); if(!boks) return; boks.innerHTML="";
+  SANGER.filter(s=>!valgtAnledning || s.anledning===valgtAnledning).forEach(sang=>{
     const kort=document.createElement("div");
     kort.className="sang"; kort.tabIndex=0; kort.setAttribute("role","button");
     if(valgtSang && valgtSang.id===sang.id) kort.classList.add("valgt");
     kort.innerHTML=`
       <span class="sang__ikon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
-      <span class="sang__navn"><div>${sang.tittel}</div><div class="sang__meta">${sang.meta}</div></span>
+      <span class="sang__navn"><div>${sang.tittel}</div><div class="sang__meta">${sang.meta||""}</div></span>
       <button class="horknapp" type="button" aria-label="${T("hor")} ${sang.tittel}">${IKON_PLAY}<span class="horknapp__tekst">${T("hor")}</span></button>`;
     const velg=()=>velgSang(sang, kort);
     kort.addEventListener("click", velg);
@@ -665,7 +725,7 @@ async function lagVideo(){
 }
 function startPaaNytt(){
   stoppForhands();
-  nullstillFoto(); stemmeBlob=null; valgtSang=null; mikTilstand="start";
+  nullstillFoto(); stemmeBlob=null; valgtSang=null; valgtAnledning=null; mikTilstand="start";
   document.getElementById("stemmeVis").classList.add("skjult");
   document.getElementById("samtykke").checked=false;
   document.getElementById("timer").textContent="0:00";
@@ -694,16 +754,17 @@ function lesOpp(tekst){
 }
 function lesAktivt(){
   const s=document.querySelector(".steg.aktiv"); if(!s) return;
+  const synlig=el=>el && el.offsetParent!==null;
   const deler=[];
-  const h=s.querySelector("h2"); if(h) deler.push(h.textContent);
-  const i=s.querySelector(".ingress"); if(i) deler.push(i.textContent);
-  const mh=s.querySelector("#mikHint"); if(mh && mh.textContent) deler.push(mh.textContent);
+  const h=[...s.querySelectorAll("h2")].find(synlig); if(h) deler.push(h.textContent);
+  const i=[...s.querySelectorAll(".ingress")].find(synlig); if(i) deler.push(i.textContent);
+  const mh=s.querySelector("#mikHint"); if(mh && synlig(mh) && mh.textContent) deler.push(mh.textContent);
   lesOpp(deler.join(". "));
 }
 function kunngjor(tekst){ const l=document.getElementById("live"); if(l) l.textContent=tekst||""; }
 function etterStegbytte(){
   const s=document.querySelector(".steg.aktiv"); if(!s) return;
-  const h=s.querySelector("h2");
+  const h=[...s.querySelectorAll("h2")].find(x=>x.offsetParent!==null) || s.querySelector("h2");
   if(h){ h.setAttribute("tabindex","-1"); if(startet) h.focus({preventScroll:true}); kunngjor(h.textContent); }
   if(startet) lesAktivt();
 }
@@ -721,7 +782,7 @@ function visFeil(t){const f=document.getElementById("feil");f.textContent=t;f.cl
 function skjulFeil(){document.getElementById("feil").classList.add("skjult");}
 
 /* ── Start ────────────────────────────────────────────── */
-(function(){
+(async function(){
   const velger=document.getElementById("sprak");
   SPRAK.forEach(([kode,navn])=>{ const o=document.createElement("option"); o.value=kode; o.textContent=navn; velger.appendChild(o); });
   document.getElementById("bakgrunnInputWrap") || (function(){
@@ -737,6 +798,7 @@ function skjulFeil(){document.getElementById("feil").classList.add("skjult");}
   lb.classList.toggle("aktiv", lesPaa); lb.setAttribute("aria-pressed", lesPaa?"true":"false");
   try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){}
 
+  await lastSanger();
   settSprak(LAGER.les("sing_sprak") || (navigator.language||"no").slice(0,2));
   visSteg(1);
   startet=true;
