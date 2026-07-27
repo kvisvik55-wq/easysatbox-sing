@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="no">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sing-diagnose</title>
+<style>body{font-family:monospace;background:#14301f;color:#f6f0e2;padding:20px;line-height:1.6}
+.ok{color:#7fd98a}.feil{color:#ff8a7a}h1{font-size:20px}</style>
+</head>
+<body>
+<h1>EasySatBox Sing — diagnose</h1>
+<div id="ut">Kjører tester…</div>
+<script>
+(async function(){
+  const ut=[];
+  const legg=(navn,ok,detalj)=>ut.push(`<div class="${ok?'ok':'feil'}">${ok?'✓':'✗'} ${navn}${detalj?' — '+detalj:''}</div>`);
+  // 1) Hent index.html som tekst og mål den
+  try{
+    const r=await fetch('index.html',{cache:'no-store'});
+    const t=await r.text();
+    legg('index.html hentet', r.ok, t.length+' tegn');
+    legg('Fjord-koden finnes', t.includes('stegFjord'));
+    legg('Nye lastetekster finnes', t.includes('Gjør klar sangen'));
+    legg('CSS-klammer balansert', (t.match(/<style>[\s\S]*?<\/style>/)||[''])[0].split('{').length === (t.match(/<style>[\s\S]*?<\/style>/)||[''])[0].split('}').length);
+    legg('Slutter med </html>', t.trim().endsWith('</html>'));
+    legg('Riktig tegnsett (æøå intakt)', t.includes('Hva feirer du?'));
+  }catch(e){ legg('Klarte ikke hente index.html', false, e.message); }
+  // 2) Sjekk ressursene
+  for(const f of ['sanger.json','scener.json','sommer.jpg','vinter.jpg','host.jpg','jul.jpg']){
+    try{ const r=await fetch(f,{cache:'no-store'}); legg(f, r.ok, r.status); }
+    catch(e){ legg(f,false,e.message); }
+  }
+  // 3) Nettleserinfo
+  ut.push('<br><div>Nettleser: '+navigator.userAgent+'</div>');
+  document.getElementById('ut').innerHTML=ut.join('');
+})();
+</script>
+</body>
+</html>
