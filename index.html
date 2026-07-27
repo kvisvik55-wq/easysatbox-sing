@@ -784,7 +784,7 @@ async function fjernBakgrunn(blob){
   return ut;
 }
 
-/* Composite: scene + person (bak skiltet) + tekst på skiltet */
+/* Composite (bunnbånd-modellen): scene + person mot bunnkanten + brent trebånd med hilsen nederst */
 async function byggComposite(medPerson){
   const sc = valgtScene; if(!sc) return null;
   const W=768, H=1376;
@@ -793,59 +793,50 @@ async function byggComposite(medPerson){
   const scene=await lastBildeUrl(sc.fil);
   ctx.drawImage(scene,0,0,W,H);
 
+  const baandH = Math.round((sc.baand||0.135)*H);
+  const baandTopp = H - baandH;
+
   if(medPerson && bildeBlob){
     const utklipp = await fjernBakgrunn(bildeBlob);
     const p = await lastBildeEl(utklipp);
-    const pl = sc.person;
-    const skiltTopp = sc.skilt.y1*H;
-    // Skaler så personen fyller bredden, topp ved pl.topp; klippes ved skiltkanten
-    let bredde = pl.maksBredde*W;
-    let hoyde  = bredde * (p.height/p.width);
-    const maksHoyde = (skiltTopp - pl.topp*H) * 1.35;   // litt overlapp bak skiltet
-    if(hoyde > maksHoyde){ hoyde = maksHoyde; bredde = hoyde * (p.width/p.height); }
-    const px = pl.cx*W - bredde/2;
-    const py = pl.topp*H;
-    const s0=sc.skilt;
-    ctx.save();
-    // Klipp: aldri under skiltkanten, og aldri bredere enn skiltet (+ liten marg)
-    const marg=(s0.x2-s0.x1)*W*0.03;
-    ctx.beginPath(); ctx.rect(s0.x1*W+marg, 0, (s0.x2-s0.x1)*W-2*marg, skiltTopp+8);
-    ctx.clip();
+    // Personen: bunnkant mot båndets overkant, sentrert, ansiktet stort.
+    // Skaler etter høyde: personen fyller ~52% av bildehøyden over båndet.
+    let hoyde = (H - baandH) * 0.52;
+    let bredde = hoyde * (p.width/p.height);
+    const maksBredde = W * 0.66;
+    if(bredde > maksBredde){ bredde = maksBredde; hoyde = bredde * (p.height/p.width); }
+    const px = W/2 - bredde/2;
+    const py = baandTopp - hoyde;                 // bunn av personen = topp av båndet
     ctx.drawImage(p, px, py, bredde, hoyde);
-    ctx.restore();
-    // tegn skiltdelen av scenen oppå igjen så fjøla ligger foran personen
-    const s=sc.skilt;
-    ctx.drawImage(scene, s.x1*W-10, s.y1*H-10, (s.x2-s.x1)*W+20, (s.y2-s.y1)*H+20,
-                          s.x1*W-10, s.y1*H-10, (s.x2-s.x1)*W+20, (s.y2-s.y1)*H+20);
   }
 
-  // Tekst på skiltet
+  // Brent trebånd nederst
+  const g = ctx.createLinearGradient(0, baandTopp, 0, H);
+  g.addColorStop(0, "#5a3a1e"); g.addColorStop(0.5, "#6b4726"); g.addColorStop(1, "#4a2f18");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, baandTopp, W, baandH);
+  // trestruktur: tynne mørke årer + gull kantlinje øverst
+  ctx.strokeStyle = "rgba(30,18,8,.35)"; ctx.lineWidth = 1;
+  for(let y=baandTopp+7; y<H; y+=9){
+    ctx.beginPath(); ctx.moveTo(0, y + Math.sin(y)*1.5); ctx.lineTo(W, y + Math.cos(y*0.7)*1.5); ctx.stroke();
+  }
+  ctx.fillStyle = "rgba(207,166,78,.85)";
+  ctx.fillRect(0, baandTopp, W, 4);
+
+  // Hilsen på båndet
   const tekst = document.getElementById("hilsenTekst").value.trim().toUpperCase();
   if(tekst){
-    const s=sc.skilt;
-    const bx1=s.x1*W*1.0+ (s.x2-s.x1)*W*0.06, bx2=s.x2*W - (s.x2-s.x1)*W*0.06;
-    const by1=s.y1*H + (s.y2-s.y1)*H*0.07,    by2=s.y2*H - (s.y2-s.y1)*H*0.07;
-    let linjer=[tekst];
-    if(tekst.length>14 && tekst.includes(" ")){
-      let mid=Math.floor(tekst.length/2), best=-1, avst=1e9;
-      for(let i=0;i<tekst.length;i++){ if(tekst[i]===" " && Math.abs(i-mid)<avst){avst=Math.abs(i-mid);best=i;} }
-      if(best>0) linjer=[tekst.slice(0,best), tekst.slice(best+1)];
-    }
-    let size=150;
-    for(; size>=18; size-=4){
-      ctx.font=`700 ${size}px Fraunces, Georgia, serif`;
-      const maks=Math.max(...linjer.map(l=>ctx.measureText(l).width));
-      if(maks<=(bx2-bx1) && size*1.2*linjer.length<=(by2-by1)) break;
-    }
+    const marg = W*0.05;
+    let size = Math.round(baandH*0.52);
     ctx.textAlign="center"; ctx.textBaseline="middle";
-    const cx=(bx1+bx2)/2;
-    let y=(by1+by2)/2 - (linjer.length-1)*size*0.62;
-    linjer.forEach(l=>{
+    for(; size>=16; size-=2){
       ctx.font=`700 ${size}px Fraunces, Georgia, serif`;
-      ctx.fillStyle="rgba(235,225,200,.9)"; ctx.fillText(l, cx+2, y+2);
-      ctx.fillStyle="#4a341c";              ctx.fillText(l, cx, y);
-      y+=size*1.24;
-    });
+      if(ctx.measureText(tekst).width <= W-2*marg) break;
+    }
+    const cy = baandTopp + baandH/2 + 1;
+    ctx.font=`700 ${size}px Fraunces, Georgia, serif`;
+    ctx.fillStyle="rgba(20,12,4,.75)"; ctx.fillText(tekst, W/2+2, cy+2);   // brent skygge
+    ctx.fillStyle="#f2e2b8";            ctx.fillText(tekst, W/2, cy);       // lys innbrent tekst
   }
   return c;
 }
@@ -875,7 +866,7 @@ async function lagFjordVideo(){
     const c=await byggComposite(true);               // full composite med utklipt person
     const bildeData=c.toDataURL("image/jpeg",0.88);
     const vid=await kall("startVideo",{ bilde: bildeData, audioUrl: sang.url,
-      prompt: "The person behind the wooden sign sings warmly and joyfully — expressive face, genuine smile, natural head movement. The landscape stays still." });
+      prompt: "The person sings warmly and joyfully — expressive face, genuine smile, natural head movement. The person stays in place; the landscape and the wooden text banner at the bottom stay completely still." });
     const { videoUrl }=await vent("pollVideo", vid.id);
     const blob=await (await fetch(videoUrl)).blob();
     const lokal=URL.createObjectURL(blob);
