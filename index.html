@@ -779,8 +779,11 @@ async function byggComposite(medPerson){
     if(hoyde > maksHoyde){ hoyde = maksHoyde; bredde = hoyde * (p.width/p.height); }
     const px = pl.cx*W - bredde/2;
     const py = pl.topp*H;
+    const s0=sc.skilt;
     ctx.save();
-    ctx.beginPath(); ctx.rect(0,0,W,skiltTopp+8);        // alt under skiltkanten skjules
+    // Klipp: aldri under skiltkanten, og aldri bredere enn skiltet (+ liten marg)
+    const marg=(s0.x2-s0.x1)*W*0.03;
+    ctx.beginPath(); ctx.rect(s0.x1*W+marg, 0, (s0.x2-s0.x1)*W-2*marg, skiltTopp+8);
     ctx.clip();
     ctx.drawImage(p, px, py, bredde, hoyde);
     ctx.restore();

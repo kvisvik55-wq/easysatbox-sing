@@ -11,8 +11,8 @@
     },
     "person": {
       "cx": 0.5,
-      "topp": 0.16,
-      "maksBredde": 0.62
+      "topp": 0.2,
+      "maksBredde": 0.44
     }
   },
   {
@@ -27,8 +27,8 @@
     },
     "person": {
       "cx": 0.5,
-      "topp": 0.17,
-      "maksBredde": 0.62
+      "topp": 0.21,
+      "maksBredde": 0.44
     }
   },
   {
@@ -43,8 +43,8 @@
     },
     "person": {
       "cx": 0.5,
-      "topp": 0.16,
-      "maksBredde": 0.62
+      "topp": 0.195,
+      "maksBredde": 0.44
     }
   },
   {
@@ -59,8 +59,8 @@
     },
     "person": {
       "cx": 0.5,
-      "topp": 0.17,
-      "maksBredde": 0.62
+      "topp": 0.2,
+      "maksBredde": 0.44
     }
   }
 ]
