@@ -115,6 +115,20 @@
 
   .sanger{display:grid;gap:12px;margin-bottom:8px}
   .anledninger{display:grid;gap:12px;margin-bottom:8px}
+  .scener{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+  .scene{position:relative;border:3px solid #e6ddc4;border-radius:16px;overflow:hidden;cursor:pointer;padding:0;background:none}
+  .scene img{width:100%;aspect-ratio:768/1376;object-fit:cover;display:block}
+  .scene span{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(10,22,15,.85));color:var(--krem);font-family:'Nunito';font-weight:800;font-size:15px;padding:18px 10px 10px;text-align:center}
+  .scene:hover{border-color:var(--gull)}
+  .scene:focus-visible{outline:4px solid var(--gull);outline-offset:2px}
+  .scene.valgt{border-color:var(--gronn-lys);box-shadow:0 0 0 3px rgba(44,104,68,.35)}
+  .feltnavn{display:block;font-weight:800;font-size:17px;margin:6px 0 8px}
+  #hilsenTekst{width:100%;font-family:'Nunito';font-weight:800;font-size:20px;padding:16px 18px;border:3px solid #e6ddc4;border-radius:14px;background:#fff;color:var(--tekst)}
+  #hilsenTekst:focus{outline:none;border-color:var(--gull)}
+  .forslag{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .forslag button{background:#efe8d3;border:none;border-radius:999px;padding:10px 14px;font-family:'Nunito';font-weight:700;font-size:15px;cursor:pointer;color:var(--tekst)}
+  .forslag button:hover{background:var(--gull-lys)}
+  .forslag button:focus-visible{outline:3px solid var(--gull);outline-offset:2px}
   .sang{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
     background:#fff;border:3px solid #e6ddc4;border-radius:16px;padding:16px 18px;
     font-family:'Nunito';font-size:19px;font-weight:700;color:var(--tekst);transition:border-color .15s,background .15s}
@@ -250,6 +264,22 @@
       </div>
     </section>
 
+    <!-- FJORD: velg scene + skriv hilsen -->
+    <section class="steg" id="stegFjord">
+      <div class="eyebrow" data-steg="3"></div>
+      <h2 data-i18n="fjordTittel"></h2>
+      <p class="ingress" data-i18n="fjordIngress"></p>
+      <div class="scener" id="scenerBoks"></div>
+      <label class="feltnavn" for="hilsenTekst" data-i18n="hilsenLabel"></label>
+      <input type="text" id="hilsenTekst" maxlength="40" autocomplete="off" oninput="oppdaterFjordKnapp();tegnForh()">
+      <div class="forslag" id="hilsenForslag"></div>
+      <img id="fjordForh" class="foto skjult" alt="" style="aspect-ratio:768/1376;margin-top:14px">
+      <div class="rad">
+        <button class="knapp" data-i18n="tilbake" onclick="visAnledninger()"></button>
+        <button class="knapp knapp--gull knapp--stor" id="fjordLagKnapp" data-i18n="lagVideoen" onclick="lagFjordVideo()" disabled></button>
+      </div>
+    </section>
+
     <section class="steg" id="steg4">
       <div class="laster">
         <div class="snurr"></div>
@@ -296,12 +326,21 @@ async function lastSanger(){
   }));
 }
 
+/* Fjordscener lastes fra scener.json */
+let SCENER = [];
+async function lastScener(){
+  try{
+    const r = await fetch("scener.json", { cache:"no-store" });
+    if(r.ok){ const j = await r.json(); if(Array.isArray(j)) SCENER = j; }
+  }catch(e){}
+}
+
 /* ── Språk (12, som Photo Enhancer) ───────────────────── */
 const SPRAK = [["no","Norsk"],["en","English"],["de","Deutsch"],["fr","Français"],["es","Español"],
   ["it","Italiano"],["ru","Русский"],["ja","日本語"],["zh","中文"],["pl","Polski"],["lv","Latviešu"],["lt","Lietuvių"]];
 
 const I18N = {
- no:{velgSprak:"Velg språk",lesOpp:"Les opp",bakgrunn:"Bakgrunn",steg:"Steg {n} av 4",ferdig:"Ferdig",
+ no:{fjordTittel:"Fjordhilsen",fjordIngress:"Velg et landskap og skriv hilsenen som skal stå på skiltet. Du synger fra utsikten!",hilsenLabel:"Hilsen på skiltet",hilsenForslag:["GRATULERER MED DAGEN", "GOD JUL", "GOD SOMMER", "GOD BEDRING", "TIL LYKKE"],velgSprak:"Velg språk",lesOpp:"Les opp",bakgrunn:"Bakgrunn",steg:"Steg {n} av 4",ferdig:"Ferdig",
    s1t:"Ta et bilde",s1i:"Ta et bilde av deg selv, eller velg et du har fra før. Se rett i kameraet med et tydelig ansikt.",
    taBilde:"Ta bilde",velgBilder:"Velg fra bildene mine",paaNytt:"Ta på nytt",videre:"Videre",tilbake:"Tilbake",
    s2t:"Spill inn stemmen din",s2i:"Trykk på mikrofonen og snakk eller nynn i cirka 20 sekunder. Da lager vi sangen med akkurat din stemme.",
@@ -309,11 +348,11 @@ const I18N = {
    samtykke:"Jeg godtar at min egen stemme brukes til å lage denne videoen.",
    s3t:"Velg en sang",s3i:"Trykk på sangen du vil synge.",hvaFeirer:"Hva feirer du?",hvaFeirerIngress:"Trykk på anledningen.",andreAnledninger:"Andre anledninger",hor:"Hør",stopp:"Stopp",lagVideoen:"Lag videoen",
    lasterHint:"Dette tar vanligvis under ett minutt.",
-   laster:["Hører på stemmen din…","Lærer sangen…","Lar deg synge den…","Setter ansiktet i bevegelse…","Nesten ferdig…"],
+   laster:["Gjør klar sangen…", "Vekker bildet til live…", "Øver på teksten…", "Finner tonen…", "Snart klart…"],
    rt:"Nå synger du!",ri:"Se videoen, last den ned eller lag en ny.",lastNed:"Last ned videoen",lagNy:"Lag en ny video",
    feilVideo:"Vi klarte ikke å lage videoen. Prøv gjerne igjen.",feilMik:"Vi fikk ikke tilgang til mikrofonen. Sjekk at nettleseren har lov til å bruke den.",
    feilSang:"Denne sangen mangler lydfil ennå.",feilTjeneste:"Tjenesten er ikke satt opp ennå."},
- en:{velgSprak:"Choose language",lesOpp:"Read aloud",bakgrunn:"Background",steg:"Step {n} of 4",ferdig:"Done",
+ en:{fjordTittel:"Fjord greeting",fjordIngress:"Choose a landscape and write the greeting for the sign. You'll be singing from the viewpoint!",hilsenLabel:"Greeting on the sign",hilsenForslag:["HAPPY BIRTHDAY", "MERRY CHRISTMAS", "CONGRATULATIONS", "GET WELL SOON", "BEST WISHES"],velgSprak:"Choose language",lesOpp:"Read aloud",bakgrunn:"Background",steg:"Step {n} of 4",ferdig:"Done",
    s1t:"Take a photo",s1i:"Take a photo of yourself, or pick one you already have. Look straight at the camera with a clear face.",
    taBilde:"Take photo",velgBilder:"Choose from my photos",paaNytt:"Retake",videre:"Next",tilbake:"Back",
    s2t:"Record your voice",s2i:"Tap the microphone and talk or hum for about 20 seconds. Then we make the song in your own voice.",
@@ -321,11 +360,11 @@ const I18N = {
    samtykke:"I agree that my own voice is used to make this video.",
    s3t:"Choose a song",s3i:"Tap the song you want to sing.",hvaFeirer:"What are you celebrating?",hvaFeirerIngress:"Tap the occasion.",andreAnledninger:"Other occasions",hor:"Listen",stopp:"Stop",lagVideoen:"Make the video",
    lasterHint:"This usually takes under a minute.",
-   laster:["Listening to your voice…","Learning the song…","Letting you sing it…","Bringing the face to life…","Almost done…"],
+   laster:["Getting the song ready…", "Bringing your photo to life…", "Rehearsing the words…", "Finding the tune…", "Almost there…"],
    rt:"Now you're singing!",ri:"Watch the video, download it or make a new one.",lastNed:"Download the video",lagNy:"Make a new video",
    feilVideo:"We couldn't make the video. Please try again.",feilMik:"We couldn't access the microphone. Check that your browser is allowed to use it.",
    feilSang:"This song doesn't have an audio file yet.",feilTjeneste:"The service isn't set up yet."},
- de:{velgSprak:"Sprache wählen",lesOpp:"Vorlesen",bakgrunn:"Hintergrund",steg:"Schritt {n} von 4",ferdig:"Fertig",
+ de:{fjordTittel:"Fjordgruß",fjordIngress:"Wähle eine Landschaft und schreibe den Gruß für das Schild. Du singst vom Aussichtspunkt!",hilsenLabel:"Gruß auf dem Schild",hilsenForslag:["HERZLICHEN GLÜCKWUNSCH", "FROHE WEIHNACHTEN", "GUTE BESSERUNG", "ALLES GUTE", "VIEL GLÜCK"],velgSprak:"Sprache wählen",lesOpp:"Vorlesen",bakgrunn:"Hintergrund",steg:"Schritt {n} von 4",ferdig:"Fertig",
    s1t:"Ein Foto aufnehmen",s1i:"Nimm ein Foto von dir auf oder wähle ein vorhandenes. Schau direkt in die Kamera, mit klarem Gesicht.",
    taBilde:"Foto aufnehmen",velgBilder:"Aus meinen Fotos wählen",paaNytt:"Neu aufnehmen",videre:"Weiter",tilbake:"Zurück",
    s2t:"Nimm deine Stimme auf",s2i:"Tippe auf das Mikrofon und sprich oder summe etwa 20 Sekunden. Dann erstellen wir das Lied mit deiner eigenen Stimme.",
@@ -333,11 +372,11 @@ const I18N = {
    samtykke:"Ich stimme zu, dass meine eigene Stimme für dieses Video verwendet wird.",
    s3t:"Wähle ein Lied",s3i:"Tippe auf das Lied, das du singen möchtest.",hvaFeirer:"Was feierst du?",hvaFeirerIngress:"Tippe auf den Anlass.",andreAnledninger:"Andere Anlässe",hor:"Anhören",stopp:"Stopp",lagVideoen:"Video erstellen",
    lasterHint:"Das dauert meist unter einer Minute.",
-   laster:["Deine Stimme wird gehört…","Das Lied wird gelernt…","Du darfst es singen…","Das Gesicht wird lebendig…","Fast fertig…"],
+   laster:["Das Lied wird vorbereitet…", "Dein Foto erwacht zum Leben…", "Der Text wird geprobt…", "Die Melodie wird gefunden…", "Fast fertig…"],
    rt:"Jetzt singst du!",ri:"Sieh dir das Video an, lade es herunter oder erstelle ein neues.",lastNed:"Video herunterladen",lagNy:"Neues Video erstellen",
    feilVideo:"Wir konnten das Video nicht erstellen. Bitte versuche es erneut.",feilMik:"Kein Zugriff auf das Mikrofon. Prüfe, ob der Browser es verwenden darf.",
    feilSang:"Dieses Lied hat noch keine Audiodatei.",feilTjeneste:"Der Dienst ist noch nicht eingerichtet."},
- fr:{velgSprak:"Choisir la langue",lesOpp:"Lire à voix haute",bakgrunn:"Arrière-plan",steg:"Étape {n} sur 4",ferdig:"Terminé",
+ fr:{fjordTittel:"Salut du fjord",fjordIngress:"Choisissez un paysage et écrivez le message du panneau. Vous chanterez depuis le belvédère !",hilsenLabel:"Message sur le panneau",hilsenForslag:["JOYEUX ANNIVERSAIRE", "JOYEUX NOËL", "FÉLICITATIONS", "BON RÉTABLISSEMENT", "MEILLEURS VŒUX"],velgSprak:"Choisir la langue",lesOpp:"Lire à voix haute",bakgrunn:"Arrière-plan",steg:"Étape {n} sur 4",ferdig:"Terminé",
    s1t:"Prendre une photo",s1i:"Prenez une photo de vous, ou choisissez-en une existante. Regardez droit vers l'appareil, le visage bien visible.",
    taBilde:"Prendre une photo",velgBilder:"Choisir dans mes photos",paaNytt:"Reprendre",videre:"Suivant",tilbake:"Retour",
    s2t:"Enregistrez votre voix",s2i:"Touchez le micro et parlez ou fredonnez environ 20 secondes. Nous créons alors la chanson avec votre propre voix.",
@@ -345,11 +384,11 @@ const I18N = {
    samtykke:"J'accepte que ma propre voix soit utilisée pour créer cette vidéo.",
    s3t:"Choisissez une chanson",s3i:"Touchez la chanson que vous voulez chanter.",hvaFeirer:"Que fêtez-vous ?",hvaFeirerIngress:"Touchez l'occasion.",andreAnledninger:"Autres occasions",hor:"Écouter",stopp:"Arrêter",lagVideoen:"Créer la vidéo",
    lasterHint:"Cela prend généralement moins d'une minute.",
-   laster:["On écoute votre voix…","On apprend la chanson…","On vous fait chanter…","On anime le visage…","Presque terminé…"],
+   laster:["On prépare la chanson…", "Votre photo prend vie…", "On répète les paroles…", "On trouve la mélodie…", "Presque prêt…"],
    rt:"Vous chantez maintenant !",ri:"Regardez la vidéo, téléchargez-la ou créez-en une nouvelle.",lastNed:"Télécharger la vidéo",lagNy:"Créer une nouvelle vidéo",
    feilVideo:"Nous n'avons pas pu créer la vidéo. Veuillez réessayer.",feilMik:"Impossible d'accéder au micro. Vérifiez que le navigateur y est autorisé.",
    feilSang:"Cette chanson n'a pas encore de fichier audio.",feilTjeneste:"Le service n'est pas encore configuré."},
- es:{velgSprak:"Elegir idioma",lesOpp:"Leer en voz alta",bakgrunn:"Fondo",steg:"Paso {n} de 4",ferdig:"Listo",
+ es:{fjordTittel:"Saludo del fiordo",fjordIngress:"Elige un paisaje y escribe el saludo del cartel. ¡Cantarás desde el mirador!",hilsenLabel:"Saludo en el cartel",hilsenForslag:["FELIZ CUMPLEAÑOS", "FELIZ NAVIDAD", "FELICIDADES", "QUE TE MEJORES", "MUCHA SUERTE"],velgSprak:"Elegir idioma",lesOpp:"Leer en voz alta",bakgrunn:"Fondo",steg:"Paso {n} de 4",ferdig:"Listo",
    s1t:"Toma una foto",s1i:"Tómate una foto o elige una que ya tengas. Mira de frente a la cámara, con la cara despejada.",
    taBilde:"Tomar foto",velgBilder:"Elegir de mis fotos",paaNytt:"Repetir",videre:"Siguiente",tilbake:"Atrás",
    s2t:"Graba tu voz",s2i:"Toca el micrófono y habla o tararea unos 20 segundos. Así creamos la canción con tu propia voz.",
@@ -357,11 +396,11 @@ const I18N = {
    samtykke:"Acepto que se use mi propia voz para crear este vídeo.",
    s3t:"Elige una canción",s3i:"Toca la canción que quieres cantar.",hvaFeirer:"¿Qué celebras?",hvaFeirerIngress:"Toca la ocasión.",andreAnledninger:"Otras ocasiones",hor:"Escuchar",stopp:"Detener",lagVideoen:"Crear el vídeo",
    lasterHint:"Esto suele tardar menos de un minuto.",
-   laster:["Escuchando tu voz…","Aprendiendo la canción…","Dejándote cantarla…","Dando vida a la cara…","Casi listo…"],
+   laster:["Preparando la canción…", "Dando vida a tu foto…", "Ensayando la letra…", "Encontrando la melodía…", "Casi listo…"],
    rt:"¡Ahora estás cantando!",ri:"Mira el vídeo, descárgalo o crea uno nuevo.",lastNed:"Descargar el vídeo",lagNy:"Crear un vídeo nuevo",
    feilVideo:"No pudimos crear el vídeo. Inténtalo de nuevo.",feilMik:"No pudimos acceder al micrófono. Comprueba que el navegador tenga permiso.",
    feilSang:"Esta canción aún no tiene archivo de audio.",feilTjeneste:"El servicio aún no está configurado."},
- it:{velgSprak:"Scegli la lingua",lesOpp:"Leggi ad alta voce",bakgrunn:"Sfondo",steg:"Passo {n} di 4",ferdig:"Fatto",
+ it:{fjordTittel:"Saluto dal fiordo",fjordIngress:"Scegli un paesaggio e scrivi il saluto per il cartello. Canterai dal belvedere!",hilsenLabel:"Saluto sul cartello",hilsenForslag:["BUON COMPLEANNO", "BUON NATALE", "CONGRATULAZIONI", "GUARISCI PRESTO", "TANTI AUGURI"],velgSprak:"Scegli la lingua",lesOpp:"Leggi ad alta voce",bakgrunn:"Sfondo",steg:"Passo {n} di 4",ferdig:"Fatto",
    s1t:"Scatta una foto",s1i:"Scatta una foto di te stesso o scegline una che hai già. Guarda dritto nella fotocamera, con il viso ben visibile.",
    taBilde:"Scatta foto",velgBilder:"Scegli dalle mie foto",paaNytt:"Riscatta",videre:"Avanti",tilbake:"Indietro",
    s2t:"Registra la tua voce",s2i:"Tocca il microfono e parla o canticchia per circa 20 secondi. Così creiamo la canzone con la tua voce.",
@@ -369,11 +408,11 @@ const I18N = {
    samtykke:"Acconsento all'uso della mia voce per creare questo video.",
    s3t:"Scegli una canzone",s3i:"Tocca la canzone che vuoi cantare.",hvaFeirer:"Cosa festeggi?",hvaFeirerIngress:"Tocca l'occasione.",andreAnledninger:"Altre occasioni",hor:"Ascolta",stopp:"Ferma",lagVideoen:"Crea il video",
    lasterHint:"Di solito ci vuole meno di un minuto.",
-   laster:["Ascoltiamo la tua voce…","Impariamo la canzone…","Ti facciamo cantare…","Diamo vita al viso…","Quasi fatto…"],
+   laster:["Prepariamo la canzone…", "Diamo vita alla tua foto…", "Proviamo le parole…", "Troviamo la melodia…", "Quasi pronto…"],
    rt:"Ora stai cantando!",ri:"Guarda il video, scaricalo o creane uno nuovo.",lastNed:"Scarica il video",lagNy:"Crea un nuovo video",
    feilVideo:"Non siamo riusciti a creare il video. Riprova.",feilMik:"Impossibile accedere al microfono. Verifica che il browser sia autorizzato.",
    feilSang:"Questa canzone non ha ancora un file audio.",feilTjeneste:"Il servizio non è ancora configurato."},
- ru:{velgSprak:"Выберите язык",lesOpp:"Озвучить",bakgrunn:"Фон",steg:"Шаг {n} из 4",ferdig:"Готово",
+ ru:{fjordTittel:"Привет с фьорда",fjordIngress:"Выберите пейзаж и напишите приветствие для таблички. Вы будете петь со смотровой площадки!",hilsenLabel:"Надпись на табличке",hilsenForslag:["С ДНЁМ РОЖДЕНИЯ", "С РОЖДЕСТВОМ", "ПОЗДРАВЛЯЕМ", "ВЫЗДОРАВЛИВАЙ", "С ЮБИЛЕЕМ"],velgSprak:"Выберите язык",lesOpp:"Озвучить",bakgrunn:"Фон",steg:"Шаг {n} из 4",ferdig:"Готово",
    s1t:"Сделайте фото",s1i:"Сфотографируйте себя или выберите готовое фото. Смотрите прямо в камеру, лицо должно быть чётко видно.",
    taBilde:"Сделать фото",velgBilder:"Выбрать из моих фото",paaNytt:"Переснять",videre:"Далее",tilbake:"Назад",
    s2t:"Запишите свой голос",s2i:"Нажмите на микрофон и говорите или напевайте около 20 секунд. Тогда мы создадим песню вашим голосом.",
@@ -381,11 +420,11 @@ const I18N = {
    samtykke:"Я согласен(на), что мой голос используется для создания этого видео.",
    s3t:"Выберите песню",s3i:"Нажмите на песню, которую хотите спеть.",hvaFeirer:"Что вы празднуете?",hvaFeirerIngress:"Нажмите на повод.",andreAnledninger:"Другие поводы",hor:"Слушать",stopp:"Стоп",lagVideoen:"Создать видео",
    lasterHint:"Обычно это занимает меньше минуты.",
-   laster:["Слушаем ваш голос…","Разучиваем песню…","Даём вам спеть…","Оживляем лицо…","Почти готово…"],
+   laster:["Готовим песню…", "Оживляем ваше фото…", "Репетируем слова…", "Подбираем мелодию…", "Почти готово…"],
    rt:"Теперь вы поёте!",ri:"Посмотрите видео, скачайте его или создайте новое.",lastNed:"Скачать видео",lagNy:"Создать новое видео",
    feilVideo:"Не удалось создать видео. Попробуйте ещё раз.",feilMik:"Нет доступа к микрофону. Проверьте, разрешено ли браузеру его использовать.",
    feilSang:"У этой песни пока нет аудиофайла.",feilTjeneste:"Сервис ещё не настроен."},
- ja:{velgSprak:"言語を選ぶ",lesOpp:"読み上げ",bakgrunn:"背景",steg:"ステップ {n} / 4",ferdig:"完了",
+ ja:{fjordTittel:"フィヨルドからのメッセージ",fjordIngress:"風景を選んで、看板に書くメッセージを入力してください。絶景から歌います！",hilsenLabel:"看板のメッセージ",hilsenForslag:["お誕生日おめでとう", "メリークリスマス", "おめでとう", "お大事に", "ご結婚おめでとう"],velgSprak:"言語を選ぶ",lesOpp:"読み上げ",bakgrunn:"背景",steg:"ステップ {n} / 4",ferdig:"完了",
    s1t:"写真を撮る",s1i:"自分の写真を撮るか、すでにある写真を選びます。顔がはっきり見えるよう、カメラをまっすぐ見てください。",
    taBilde:"写真を撮る",velgBilder:"自分の写真から選ぶ",paaNytt:"撮り直す",videre:"次へ",tilbake:"戻る",
    s2t:"声を録音する",s2i:"マイクをタップして、約20秒間話すか口ずさんでください。あなたの声で歌を作ります。",
@@ -393,11 +432,11 @@ const I18N = {
    samtykke:"この動画の作成に自分の声を使うことに同意します。",
    s3t:"曲を選ぶ",s3i:"歌いたい曲をタップしてください。",hvaFeirer:"お祝いはなんですか？",hvaFeirerIngress:"行事をタップしてください。",andreAnledninger:"ほかの行事",hor:"聞く",stopp:"停止",lagVideoen:"動画を作る",
    lasterHint:"通常は1分以内で終わります。",
-   laster:["あなたの声を聞いています…","曲を覚えています…","あなたに歌わせています…","顔を動かしています…","もうすぐ完成…"],
+   laster:["歌を準備しています…", "写真に命を吹き込んでいます…", "歌詞を練習しています…", "メロディを合わせています…", "もうすぐ完成…"],
    rt:"あなたが歌っています！",ri:"動画を見て、ダウンロードするか、新しく作りましょう。",lastNed:"動画をダウンロード",lagNy:"新しい動画を作る",
    feilVideo:"動画を作成できませんでした。もう一度お試しください。",feilMik:"マイクにアクセスできませんでした。ブラウザの使用許可を確認してください。",
    feilSang:"この曲にはまだ音声ファイルがありません。",feilTjeneste:"サービスがまだ設定されていません。"},
- zh:{velgSprak:"选择语言",lesOpp:"朗读",bakgrunn:"背景",steg:"第 {n} 步，共 4 步",ferdig:"完成",
+ zh:{fjordTittel:"峡湾祝福",fjordIngress:"选择一个风景，并写下木牌上的祝福语。你将在观景台歌唱！",hilsenLabel:"木牌上的祝福",hilsenForslag:["生日快乐", "圣诞快乐", "恭喜恭喜", "早日康复", "新婚快乐"],velgSprak:"选择语言",lesOpp:"朗读",bakgrunn:"背景",steg:"第 {n} 步，共 4 步",ferdig:"完成",
    s1t:"拍一张照片",s1i:"给自己拍张照片，或选择一张已有的。请正视镜头，让面部清晰可见。",
    taBilde:"拍照",velgBilder:"从我的照片中选择",paaNytt:"重拍",videre:"下一步",tilbake:"返回",
    s2t:"录下你的声音",s2i:"点击麦克风，说话或哼唱约20秒。我们就用你自己的声音来做这首歌。",
@@ -405,11 +444,11 @@ const I18N = {
    samtykke:"我同意使用我自己的声音来制作这个视频。",
    s3t:"选择一首歌",s3i:"点击你想唱的歌。",hvaFeirer:"你在庆祝什么？",hvaFeirerIngress:"点击场合。",andreAnledninger:"其他场合",hor:"试听",stopp:"停止",lagVideoen:"制作视频",
    lasterHint:"通常不到一分钟。",
-   laster:["正在聆听你的声音…","正在学习这首歌…","让你来唱…","让面部动起来…","即将完成…"],
+   laster:["正在准备歌曲…", "让照片活起来…", "正在练习歌词…", "正在找准旋律…", "即将完成…"],
    rt:"现在你在唱歌了！",ri:"观看视频，下载它，或再做一个。",lastNed:"下载视频",lagNy:"制作新视频",
    feilVideo:"无法制作视频，请重试。",feilMik:"无法访问麦克风。请检查浏览器是否有使用权限。",
    feilSang:"这首歌还没有音频文件。",feilTjeneste:"服务尚未设置。"},
- pl:{velgSprak:"Wybierz język",lesOpp:"Czytaj na głos",bakgrunn:"Tło",steg:"Krok {n} z 4",ferdig:"Gotowe",
+ pl:{fjordTittel:"Pozdrowienia z fiordu",fjordIngress:"Wybierz krajobraz i napisz pozdrowienie na tablicy. Zaśpiewasz z punktu widokowego!",hilsenLabel:"Napis na tablicy",hilsenForslag:["WSZYSTKIEGO NAJLEPSZEGO", "WESOŁYCH ŚWIĄT", "GRATULACJE", "SZYBKIEGO POWROTU DO ZDROWIA", "POWODZENIA"],velgSprak:"Wybierz język",lesOpp:"Czytaj na głos",bakgrunn:"Tło",steg:"Krok {n} z 4",ferdig:"Gotowe",
    s1t:"Zrób zdjęcie",s1i:"Zrób sobie zdjęcie lub wybierz już istniejące. Patrz prosto w aparat, z wyraźnie widoczną twarzą.",
    taBilde:"Zrób zdjęcie",velgBilder:"Wybierz z moich zdjęć",paaNytt:"Zrób ponownie",videre:"Dalej",tilbake:"Wstecz",
    s2t:"Nagraj swój głos",s2i:"Dotknij mikrofonu i mów lub nuć przez około 20 sekund. Wtedy stworzymy piosenkę Twoim głosem.",
@@ -417,11 +456,11 @@ const I18N = {
    samtykke:"Zgadzam się, aby mój głos został użyty do stworzenia tego filmu.",
    s3t:"Wybierz piosenkę",s3i:"Dotknij piosenki, którą chcesz zaśpiewać.",hvaFeirer:"Co świętujesz?",hvaFeirerIngress:"Dotknij okazji.",andreAnledninger:"Inne okazje",hor:"Posłuchaj",stopp:"Zatrzymaj",lagVideoen:"Utwórz film",
    lasterHint:"Zwykle trwa to krócej niż minutę.",
-   laster:["Słuchamy Twojego głosu…","Uczymy się piosenki…","Pozwalamy Ci ją zaśpiewać…","Ożywiamy twarz…","Prawie gotowe…"],
+   laster:["Przygotowujemy piosenkę…", "Ożywiamy Twoje zdjęcie…", "Ćwiczymy słowa…", "Szukamy melodii…", "Prawie gotowe…"],
    rt:"Teraz śpiewasz!",ri:"Obejrzyj film, pobierz go lub utwórz nowy.",lastNed:"Pobierz film",lagNy:"Utwórz nowy film",
    feilVideo:"Nie udało się utworzyć filmu. Spróbuj ponownie.",feilMik:"Brak dostępu do mikrofonu. Sprawdź, czy przeglądarka ma pozwolenie.",
    feilSang:"Ta piosenka nie ma jeszcze pliku audio.",feilTjeneste:"Usługa nie jest jeszcze skonfigurowana."},
- lv:{velgSprak:"Izvēlieties valodu",lesOpp:"Nolasīt skaļi",bakgrunn:"Fons",steg:"{n}. solis no 4",ferdig:"Gatavs",
+ lv:{fjordTittel:"Fjorda sveiciens",fjordIngress:"Izvēlieties ainavu un uzrakstiet sveicienu zīmei. Jūs dziedāsiet no skatu punkta!",hilsenLabel:"Sveiciens uz zīmes",hilsenForslag:["DAUDZ LAIMES DZIMŠANAS DIENĀ", "PRIECĪGUS ZIEMASSVĒTKUS", "APSVEICAM", "ĀTRU IZVESEĻOŠANOS", "VISU LABU"],velgSprak:"Izvēlieties valodu",lesOpp:"Nolasīt skaļi",bakgrunn:"Fons",steg:"{n}. solis no 4",ferdig:"Gatavs",
    s1t:"Uzņemiet foto",s1i:"Uzņemiet savu foto vai izvēlieties jau esošu. Skatieties tieši kamerā, seja lai ir skaidri redzama.",
    taBilde:"Uzņemt foto",velgBilder:"Izvēlēties no manām fotogrāfijām",paaNytt:"Uzņemt vēlreiz",videre:"Tālāk",tilbake:"Atpakaļ",
    s2t:"Ierakstiet savu balsi",s2i:"Pieskarieties mikrofonam un runājiet vai dungojiet apmēram 20 sekundes. Tad izveidosim dziesmu ar jūsu balsi.",
@@ -429,11 +468,11 @@ const I18N = {
    samtykke:"Es piekrītu, ka mana balss tiek izmantota šī video izveidei.",
    s3t:"Izvēlieties dziesmu",s3i:"Pieskarieties dziesmai, kuru vēlaties dziedāt.",hvaFeirer:"Ko jūs svinat?",hvaFeirerIngress:"Pieskarieties gadījumam.",andreAnledninger:"Citi gadījumi",hor:"Klausīties",stopp:"Apturēt",lagVideoen:"Izveidot video",
    lasterHint:"Parasti tas aizņem mazāk par minūti.",
-   laster:["Klausāmies jūsu balsi…","Mācāmies dziesmu…","Ļaujam jums to dziedāt…","Atdzīvinām seju…","Gandrīz gatavs…"],
+   laster:["Gatavojam dziesmu…", "Atdzīvinām jūsu foto…", "Mēģinām vārdus…", "Meklējam melodiju…", "Gandrīz gatavs…"],
    rt:"Tagad jūs dziedat!",ri:"Noskatieties video, lejupielādējiet to vai izveidojiet jaunu.",lastNed:"Lejupielādēt video",lagNy:"Izveidot jaunu video",
    feilVideo:"Neizdevās izveidot video. Lūdzu, mēģiniet vēlreiz.",feilMik:"Neizdevās piekļūt mikrofonam. Pārbaudiet, vai pārlūkam ir atļauja to izmantot.",
    feilSang:"Šai dziesmai vēl nav audio faila.",feilTjeneste:"Pakalpojums vēl nav iestatīts."},
- lt:{velgSprak:"Pasirinkite kalbą",lesOpp:"Skaityti balsu",bakgrunn:"Fonas",steg:"{n} žingsnis iš 4",ferdig:"Baigta",
+ lt:{fjordTittel:"Fjordo sveikinimas",fjordIngress:"Pasirinkite kraštovaizdį ir parašykite sveikinimą lentelei. Dainuosite nuo apžvalgos aikštelės!",hilsenLabel:"Sveikinimas lentelėje",hilsenForslag:["SU GIMTADIENIU", "LINKSMŲ KALĖDŲ", "SVEIKINAME", "GREITAI PASVEIK", "SĖKMĖS"],velgSprak:"Pasirinkite kalbą",lesOpp:"Skaityti balsu",bakgrunn:"Fonas",steg:"{n} žingsnis iš 4",ferdig:"Baigta",
    s1t:"Nufotografuokite",s1i:"Nusifotografuokite arba pasirinkite jau turimą nuotrauką. Žiūrėkite tiesiai į kamerą, veidas turi būti aiškiai matomas.",
    taBilde:"Fotografuoti",velgBilder:"Pasirinkti iš mano nuotraukų",paaNytt:"Fotografuoti iš naujo",videre:"Toliau",tilbake:"Atgal",
    s2t:"Įrašykite savo balsą",s2i:"Palieskite mikrofoną ir kalbėkite arba niūniuokite apie 20 sekundžių. Tada sukursime dainą jūsų balsu.",
@@ -441,7 +480,7 @@ const I18N = {
    samtykke:"Sutinku, kad mano balsas būtų naudojamas šiam vaizdo įrašui sukurti.",
    s3t:"Pasirinkite dainą",s3i:"Palieskite dainą, kurią norite dainuoti.",hvaFeirer:"Ką švenčiate?",hvaFeirerIngress:"Palieskite progą.",andreAnledninger:"Kitos progos",hor:"Klausytis",stopp:"Stabdyti",lagVideoen:"Sukurti vaizdo įrašą",
    lasterHint:"Paprastai tai trunka mažiau nei minutę.",
-   laster:["Klausomės jūsų balso…","Mokomės dainos…","Leidžiame jums ją dainuoti…","Atgaiviname veidą…","Beveik baigta…"],
+   laster:["Ruošiame dainą…", "Atgaiviname jūsų nuotrauką…", "Repetuojame žodžius…", "Ieškome melodijos…", "Beveik baigta…"],
    rt:"Dabar jūs dainuojate!",ri:"Peržiūrėkite vaizdo įrašą, atsisiųskite jį arba sukurkite naują.",lastNed:"Atsisiųsti vaizdo įrašą",lagNy:"Sukurti naują vaizdo įrašą",
    feilVideo:"Nepavyko sukurti vaizdo įrašo. Bandykite dar kartą.",feilMik:"Nepavyko pasiekti mikrofono. Patikrinkite, ar naršyklei leidžiama jį naudoti.",
    feilSang:"Ši daina dar neturi garso failo.",feilTjeneste:"Paslauga dar nesukonfigūruota."}
@@ -457,6 +496,7 @@ const LAGER = {
 /* ── Tilstand ─────────────────────────────────────────── */
 let AKTIV = "no";
 let bildeBlob=null, stemmeBlob=null, valgtSang=null, valgtAnledning=null, mikTilstand="start";
+let valgtScene=null, utklippCache=null, utklippKilde=null;
 let mediaRecorder=null, opptakBiter=[], opptakTimer=null, sekunder=0;
 let forhandsLyd=null, spillerId=null;
 let lesPaa=false, startet=false;
@@ -594,6 +634,12 @@ function anledningsListe(){
 }
 function byggAnledninger(){
   const boks=document.getElementById("anledninger"); if(!boks) return; boks.innerHTML="";
+  if(SCENER.length){
+    const fj=document.createElement("button");
+    fj.className="knapp knapp--gull"; fj.type="button"; fj.textContent="⛰ "+T("fjordTittel");
+    fj.onclick=()=>visFjord();
+    boks.appendChild(fj);
+  }
   anledningsListe().forEach(a=>{
     const b=document.createElement("button");
     b.className="knapp"; b.type="button"; b.textContent=a;
@@ -665,6 +711,157 @@ function velgSang(sang, el){
   lesOpp(sang.tittel); kunngjor(sang.tittel);
 }
 
+/* ══════════ FJORDHILSEN ══════════ */
+function visFjord(){
+  stoppForhands();
+  document.querySelectorAll(".steg").forEach(s=>s.classList.remove("aktiv"));
+  document.getElementById("stegFjord").classList.add("aktiv");
+  byggScener(); byggForslag(); oppdaterFjordKnapp();
+  etterStegbytte();
+}
+function byggScener(){
+  const boks=document.getElementById("scenerBoks"); boks.innerHTML="";
+  SCENER.forEach(sc=>{
+    const b=document.createElement("button");
+    b.className="scene"; b.type="button";
+    if(valgtScene && valgtScene.id===sc.id) b.classList.add("valgt");
+    b.innerHTML=`<img src="${sc.fil}" alt=""><span>${sc.navn}</span>`;
+    b.onclick=()=>{ valgtScene=sc;
+      document.querySelectorAll(".scene").forEach(x=>x.classList.remove("valgt"));
+      b.classList.add("valgt"); kunngjor(sc.navn); oppdaterFjordKnapp(); tegnForh(); };
+    boks.appendChild(b);
+  });
+}
+function byggForslag(){
+  const boks=document.getElementById("hilsenForslag"); boks.innerHTML="";
+  const liste=(I18N[AKTIV]&&I18N[AKTIV].hilsenForslag)||I18N.no.hilsenForslag||[];
+  liste.forEach(txt=>{
+    const b=document.createElement("button"); b.type="button"; b.textContent=txt;
+    b.onclick=()=>{ document.getElementById("hilsenTekst").value=txt; oppdaterFjordKnapp(); tegnForh(); };
+    boks.appendChild(b);
+  });
+}
+function oppdaterFjordKnapp(){
+  const ok = valgtScene && bildeBlob && document.getElementById("hilsenTekst").value.trim().length>0;
+  document.getElementById("fjordLagKnapp").disabled = !ok;
+}
+
+/* Bakgrunnsfjerning i nettleseren (lastes ved behov) */
+let bgLib=null;
+async function fjernBakgrunn(blob){
+  if(utklippCache && utklippKilde===blob) return utklippCache;
+  if(!bgLib){
+    bgLib = await import("https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm");
+  }
+  const ut = await bgLib.removeBackground(blob);
+  utklippCache = ut; utklippKilde = blob;
+  return ut;
+}
+
+/* Composite: scene + person (bak skiltet) + tekst på skiltet */
+async function byggComposite(medPerson){
+  const sc = valgtScene; if(!sc) return null;
+  const W=768, H=1376;
+  const c=document.createElement("canvas"); c.width=W; c.height=H;
+  const ctx=c.getContext("2d");
+  const scene=await lastBildeUrl(sc.fil);
+  ctx.drawImage(scene,0,0,W,H);
+
+  if(medPerson && bildeBlob){
+    const utklipp = await fjernBakgrunn(bildeBlob);
+    const p = await lastBildeEl(utklipp);
+    const pl = sc.person;
+    const skiltTopp = sc.skilt.y1*H;
+    // Skaler så personen fyller bredden, topp ved pl.topp; klippes ved skiltkanten
+    let bredde = pl.maksBredde*W;
+    let hoyde  = bredde * (p.height/p.width);
+    const maksHoyde = (skiltTopp - pl.topp*H) * 1.35;   // litt overlapp bak skiltet
+    if(hoyde > maksHoyde){ hoyde = maksHoyde; bredde = hoyde * (p.width/p.height); }
+    const px = pl.cx*W - bredde/2;
+    const py = pl.topp*H;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0,0,W,skiltTopp+8);        // alt under skiltkanten skjules
+    ctx.clip();
+    ctx.drawImage(p, px, py, bredde, hoyde);
+    ctx.restore();
+    // tegn skiltdelen av scenen oppå igjen så fjøla ligger foran personen
+    const s=sc.skilt;
+    ctx.drawImage(scene, s.x1*W-10, s.y1*H-10, (s.x2-s.x1)*W+20, (s.y2-s.y1)*H+20,
+                          s.x1*W-10, s.y1*H-10, (s.x2-s.x1)*W+20, (s.y2-s.y1)*H+20);
+  }
+
+  // Tekst på skiltet
+  const tekst = document.getElementById("hilsenTekst").value.trim().toUpperCase();
+  if(tekst){
+    const s=sc.skilt;
+    const bx1=s.x1*W*1.0+ (s.x2-s.x1)*W*0.06, bx2=s.x2*W - (s.x2-s.x1)*W*0.06;
+    const by1=s.y1*H + (s.y2-s.y1)*H*0.07,    by2=s.y2*H - (s.y2-s.y1)*H*0.07;
+    let linjer=[tekst];
+    if(tekst.length>14 && tekst.includes(" ")){
+      let mid=Math.floor(tekst.length/2), best=-1, avst=1e9;
+      for(let i=0;i<tekst.length;i++){ if(tekst[i]===" " && Math.abs(i-mid)<avst){avst=Math.abs(i-mid);best=i;} }
+      if(best>0) linjer=[tekst.slice(0,best), tekst.slice(best+1)];
+    }
+    let size=150;
+    for(; size>=18; size-=4){
+      ctx.font=`700 ${size}px Fraunces, Georgia, serif`;
+      const maks=Math.max(...linjer.map(l=>ctx.measureText(l).width));
+      if(maks<=(bx2-bx1) && size*1.2*linjer.length<=(by2-by1)) break;
+    }
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    const cx=(bx1+bx2)/2;
+    let y=(by1+by2)/2 - (linjer.length-1)*size*0.62;
+    linjer.forEach(l=>{
+      ctx.font=`700 ${size}px Fraunces, Georgia, serif`;
+      ctx.fillStyle="rgba(235,225,200,.9)"; ctx.fillText(l, cx+2, y+2);
+      ctx.fillStyle="#4a341c";              ctx.fillText(l, cx, y);
+      y+=size*1.24;
+    });
+  }
+  return c;
+}
+function lastBildeUrl(url){return new Promise((res,rej)=>{const i=new Image();i.crossOrigin="anonymous";i.onload=()=>res(i);i.onerror=rej;i.src=url;});}
+
+let forhTimer=null;
+function tegnForh(){
+  clearTimeout(forhTimer);
+  forhTimer=setTimeout(async ()=>{
+    if(!valgtScene) return;
+    try{
+      const c=await byggComposite(false);            // rask forhåndsvisning uten person
+      const img=document.getElementById("fjordForh");
+      img.src=c.toDataURL("image/jpeg",0.8); img.classList.remove("skjult");
+    }catch(e){}
+  }, 250);
+}
+
+async function lagFjordVideo(){
+  if(!valgtScene || !bildeBlob) return;
+  if(TJENESTE.includes("DIN-TJENESTE-APP")){ visFeil(T("feilTjeneste")); return; }
+  const sang = SANGER.find(s=>s.anledning==="Gratulasjon" && s.url) || SANGER.find(s=>s.url);
+  if(!sang){ visFeil(T("feilSang")); return; }
+
+  visSeksjon("steg4"); startLaster();
+  try{
+    const c=await byggComposite(true);               // full composite med utklipt person
+    const bildeData=c.toDataURL("image/jpeg",0.88);
+    const vid=await kall("startVideo",{ bilde: bildeData, audioUrl: sang.url,
+      prompt: "The person behind the wooden sign sings warmly and joyfully — expressive face, genuine smile, natural head movement. The landscape stays still." });
+    const { videoUrl }=await vent("pollVideo", vid.id);
+    const blob=await (await fetch(videoUrl)).blob();
+    const lokal=URL.createObjectURL(blob);
+    clearInterval(lasteTimer);
+    document.getElementById("resultatVideo").src=lokal;
+    document.getElementById("lastNed").href=lokal;
+    visSeksjon("stegFerdig");
+  }catch(e){
+    clearInterval(lasteTimer);
+    console.error(e);
+    visFjord();
+    visFeil(T("feilVideo"));
+  }
+}
+
 /* ── Hjelpere ─────────────────────────────────────────── */
 function blobTilData(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(blob);});}
 function lastBildeEl(blob){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(blob);});}
@@ -707,7 +904,7 @@ async function lagVideo(){
   try{
     // v1: bilde + sang rett til OmniHuman (stemmekloning kommer i v2)
     const bildeData=await bildeTilData(bildeBlob, 1024, 0.85);
-    const vid=await kall("startVideo",{ bilde: bildeData, audioUrl: valgtSang.url });
+    const vid=await kall("startVideo",{ bilde: bildeData, audioUrl: valgtSang.url, prompt: valgtSang.prompt || "" });
     const { videoUrl }=await vent("pollVideo", vid.id);
 
     const blob=await (await fetch(videoUrl)).blob();
@@ -725,7 +922,7 @@ async function lagVideo(){
 }
 function startPaaNytt(){
   stoppForhands();
-  nullstillFoto(); stemmeBlob=null; valgtSang=null; valgtAnledning=null; mikTilstand="start";
+  nullstillFoto(); stemmeBlob=null; valgtSang=null; valgtAnledning=null; valgtScene=null; utklippCache=null; mikTilstand="start";
   document.getElementById("stemmeVis").classList.add("skjult");
   document.getElementById("samtykke").checked=false;
   document.getElementById("timer").textContent="0:00";
@@ -798,7 +995,7 @@ function skjulFeil(){document.getElementById("feil").classList.add("skjult");}
   lb.classList.toggle("aktiv", lesPaa); lb.setAttribute("aria-pressed", lesPaa?"true":"false");
   try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){}
 
-  await lastSanger();
+  await lastSanger(); await lastScener();
   settSprak(LAGER.les("sing_sprak") || (navigator.language||"no").slice(0,2));
   visSteg(1);
   startet=true;

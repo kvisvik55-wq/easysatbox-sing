@@ -1,8 +1,13 @@
 [
-  { "id": "grat-kvinne-en", "tittel": "Congratulations", "meta": "Engelsk · kvinnestemme", "anledning": "Gratulasjon", "fil": "gratulerer-kvinne-en.mp3" },
-  { "id": "grat-mann-en",   "tittel": "Congratulations", "meta": "Engelsk · mannestemme",  "anledning": "Gratulasjon", "fil": "gratulerer-mann-en.mp3" },
-  { "id": "grat-kvinne-no", "tittel": "Gratulerer til deg", "meta": "Norsk · kvinnestemme", "anledning": "Gratulasjon", "fil": "gratulerer-kvinne-no.mp3" },
-  { "id": "grat-mann-no",   "tittel": "Gratulerer til deg", "meta": "Norsk · mannestemme",  "anledning": "Gratulasjon", "fil": "gratulerer-mann-no.mp3" },
+  { "id": "grat-kvinne-en", "tittel": "Congratulations", "meta": "Engelsk · kvinnestemme", "anledning": "Gratulasjon", "fil": "gratulerer-kvinne-en.mp3",
+    "prompt": "The character sings a warm congratulations with joy — big genuine smile, sparkling eyes, celebratory energy, natural head movement." },
+  { "id": "grat-mann-en",   "tittel": "Congratulations", "meta": "Engelsk · mannestemme",  "anledning": "Gratulasjon", "fil": "gratulerer-mann-en.mp3",
+    "prompt": "The character sings a warm congratulations with joy — big genuine smile, sparkling eyes, celebratory energy, natural head movement." },
+  { "id": "grat-kvinne-no", "tittel": "Gratulerer til deg", "meta": "Norsk · kvinnestemme", "anledning": "Gratulasjon", "fil": "gratulerer-kvinne-no.mp3",
+    "prompt": "The character sings a warm congratulations with joy — big genuine smile, sparkling eyes, celebratory energy, natural head movement." },
+  { "id": "grat-mann-no",   "tittel": "Gratulerer til deg", "meta": "Norsk · mannestemme",  "anledning": "Gratulasjon", "fil": "gratulerer-mann-no.mp3",
+    "prompt": "The character sings a warm congratulations with joy — big genuine smile, sparkling eyes, celebratory energy, natural head movement." },
 
-  { "id": "haugen", "tittel": "Sangen om Haugen", "meta": "Egenlaget", "anledning": "Egne sanger", "fil": "sangen-om-haugen.mp3" }
+  { "id": "haugen", "tittel": "Sangen om Haugen", "meta": "Egenlaget", "anledning": "Egne sanger", "fil": "sangen-om-haugen.mp3",
+    "prompt": "The character sings playfully and full of life — wide expressive smile, lively eyes, joyful energetic performance, natural head movement." }
 ]
