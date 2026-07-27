@@ -116,12 +116,12 @@
   .sanger{display:grid;gap:12px;margin-bottom:8px}
   .anledninger{display:grid;gap:12px;margin-bottom:8px}
   .scener{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
-  .scene{position:relative;border:3px solid #e6ddc4;border-radius:16px;overflow:hidden;cursor:pointer;padding:0;background:none}
-  .scene img{width:100%;aspect-ratio:768/1376;object-fit:cover;display:block}
-  .scene span{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(10,22,15,.85));color:var(--krem);font-family:'Nunito';font-weight:800;font-size:15px;padding:18px 10px 10px;text-align:center}
-  .scene:hover{border-color:var(--gull)}
-  .scene:focus-visible{outline:4px solid var(--gull);outline-offset:2px}
-  .scene.valgt{border-color:var(--gronn-lys);box-shadow:0 0 0 3px rgba(44,104,68,.35)}
+  .scenekort{position:relative;border:3px solid #e6ddc4;border-radius:16px;overflow:hidden;cursor:pointer;padding:0;background:none}
+  .scenekort img{width:100%;aspect-ratio:768/1376;object-fit:cover;display:block}
+  .scenekort span{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(10,22,15,.85));color:var(--krem);font-family:'Nunito';font-weight:800;font-size:15px;padding:18px 10px 10px;text-align:center}
+  .scenekort:hover{border-color:var(--gull)}
+  .scenekort:focus-visible{outline:4px solid var(--gull);outline-offset:2px}
+  .scenekort.valgt{border-color:var(--gronn-lys);box-shadow:0 0 0 3px rgba(44,104,68,.35)}
   .feltnavn{display:block;font-weight:800;font-size:17px;margin:6px 0 8px}
   #hilsenTekst{width:100%;font-family:'Nunito';font-weight:800;font-size:20px;padding:16px 18px;border:3px solid #e6ddc4;border-radius:14px;background:#fff;color:var(--tekst)}
   #hilsenTekst:focus{outline:none;border-color:var(--gull)}
@@ -723,11 +723,11 @@ function byggScener(){
   const boks=document.getElementById("scenerBoks"); boks.innerHTML="";
   SCENER.forEach(sc=>{
     const b=document.createElement("button");
-    b.className="scene"; b.type="button";
+    b.className="scenekort"; b.type="button";
     if(valgtScene && valgtScene.id===sc.id) b.classList.add("valgt");
     b.innerHTML=`<img src="${sc.fil}" alt=""><span>${sc.navn}</span>`;
     b.onclick=()=>{ valgtScene=sc;
-      document.querySelectorAll(".scene").forEach(x=>x.classList.remove("valgt"));
+      document.querySelectorAll(".scenekort").forEach(x=>x.classList.remove("valgt"));
       b.classList.add("valgt"); kunngjor(sc.navn); oppdaterFjordKnapp(); tegnForh(); };
     boks.appendChild(b);
   });
