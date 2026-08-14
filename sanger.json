@@ -9,5 +9,8 @@
     "prompt": "The character sings a warm congratulations with joy — big genuine smile, sparkling eyes, celebratory energy, natural head movement." },
 
   { "id": "haugen", "tittel": "Sangen om Haugen", "meta": "Egenlaget", "anledning": "Egne sanger", "fil": "sangen-om-haugen.mp3",
-    "prompt": "The character sings playfully and full of life — wide expressive smile, lively eyes, joyful energetic performance, natural head movement." }
+    "prompt": "The character sings playfully and full of life — wide expressive smile, lively eyes, joyful energetic performance, natural head movement." },
+
+  { "id": "jobber-gratis-jak-kvinne-no", "tittel": "Jobber gratis for JAK", "meta": "Norsk · kvinnestemme · kort utgave", "anledning": "Egne sanger", "fil": "jobber-gratis-jak-kvinne-no.mp3",
+    "prompt": "The character sings cheerfully and upbeat — wide warm smile, bright lively eyes, playful confident energy, natural head movement." }
 ]
