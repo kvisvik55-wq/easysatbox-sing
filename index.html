@@ -878,7 +878,7 @@ async function lagFjordVideo(){
     clearInterval(lasteTimer);
     console.error(e);
     visFjord();
-    visFeil(T("feilVideo"));
+    visFeil(T("feilVideo") + feilDetalj(e));
   }
 }
 
@@ -905,14 +905,24 @@ async function kall(action, body){
   const r=await fetch(`${TJENESTE}?action=${action}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})});
   const d=await r.json(); if(!r.ok||d.error) throw new Error(d.error||"feil"); return d;
 }
+/* Vent på ferdig video. Lengre sanger (f.eks. 15–20 sek) tar lengre tid å
+   generere, så vi venter i opptil ~12 minutter (360 × 2 sek) før vi gir opp.
+   Tidligere grense på 5 min var for kort for lengre klipp – da ga appen opp
+   selv om fal fortsatte, fullførte og belastet. */
 async function vent(action, id){
-  for(let i=0;i<150;i++){
+  for(let i=0;i<360;i++){
     const d=await kall(action,{id});
     if(d.status==="done") return d;
     if(d.status==="error") throw new Error(d.error||"feil");
     await new Promise(r=>setTimeout(r,2000));
   }
-  throw new Error("timeout");
+  const e=new Error("timeout"); e.timeout=true; throw e;
+}
+/* Vis den EKTE årsaken i feilmeldingen, ikke bare «kunne ikke lage video». */
+function feilDetalj(e){
+  if(e && e.timeout) return " — videoen tok for lang tid denne gangen. Prøv én gang til.";
+  const m = e && e.message ? String(e.message) : "";
+  return m && m !== "feil" ? " (" + m + ")" : "";
 }
 async function lagVideo(){
   if(!bildeBlob || !valgtSang) return;
@@ -937,7 +947,7 @@ async function lagVideo(){
     clearInterval(lasteTimer);
     console.error(e);
     visSeksjon("steg3");
-    visFeil(T("feilVideo"));
+    visFeil(T("feilVideo") + feilDetalj(e));
   }
 }
 function startPaaNytt(){
