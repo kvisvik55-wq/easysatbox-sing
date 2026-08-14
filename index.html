@@ -860,6 +860,7 @@ async function lagFjordVideo(){
   if(TJENESTE.includes("DIN-TJENESTE-APP")){ visFeil(T("feilTjeneste")); return; }
   const sang = fjordSang;
   if(!sang || !sang.url){ visFeil(T("feilSang")); return; }
+  if(!(await bekreftGenerering(sang.url))) return;   // kostnadssikring: ingen spend uten bekreftelse
 
   visSeksjon("steg4"); startLaster();
   try{
@@ -924,11 +925,88 @@ function feilDetalj(e){
   const m = e && e.message ? String(e.message) : "";
   return m && m !== "feil" ? " (" + m + ")" : "";
 }
+
+/* ── Kostnadssikring ───────────────────────────────────────
+   fal fakturerer per sekund ferdig video (720p ≈ $0,16/sek). Vi:
+   1) BEKREFTER før generering — ingenting brukes før brukeren trykker OK,
+   2) viser estimert kostnad for operatøren (åpne appen med ?kostnad=1),
+   3) SPERRER lyd som er lengre enn MAKS_SEK, så én video aldri kan bli dyr.
+   Slik brennes ingen kreditter ved et uhell. */
+const PRIS_PER_SEK = 0.16;         // fal 720p, per sekund
+const MAKS_SEK      = 30;          // hard grense: aldri generer lengre lyd enn dette (~$4,80)
+const KOSTNAD_MODUS = (()=>{ try{
+  const u=new URLSearchParams(location.search);
+  if(u.get("kostnad")==="1") localStorage.setItem("esb_sing_kostnad","1");
+  if(u.get("kostnad")==="0") localStorage.removeItem("esb_sing_kostnad");
+  return localStorage.getItem("esb_sing_kostnad")==="1";
+}catch(e){ return false; } })();
+
+function lydVarighet(url){
+  return new Promise((res)=>{
+    try{
+      const a=new Audio(); a.preload="metadata";
+      a.onloadedmetadata=()=>res(isFinite(a.duration)?a.duration:null);
+      a.onerror=()=>res(null);
+      a.src=url;
+    }catch(e){ res(null); }
+  });
+}
+
+/* Viser en bekreft-dialog. Returnerer true (kjør) / false (avbryt).
+   Sperrer automatisk hvis lyden er lengre enn MAKS_SEK. */
+function bekreftGenerering(url){
+  return new Promise(async (res)=>{
+    const no = (AKTIV==="no");
+    const sek = await lydVarighet(url);
+
+    // Hard grense: for lang lyd → sperr (ingen dyr generering ved uhell)
+    if(sek && sek > MAKS_SEK){
+      visFeil(no
+        ? "Denne lyden er "+Math.round(sek)+" sek — over grensen på "+MAKS_SEK+" sek. Bruk et kortere klipp."
+        : "This audio is "+Math.round(sek)+"s — over the "+MAKS_SEK+"s limit. Please use a shorter clip.");
+      return res(false);
+    }
+
+    const sekTxt = sek ? (Math.round(sek)+(no?" sekunder":" seconds")) : (no?"noen sekunder":"a few seconds");
+    const tittel = no ? "Klar til å lage videoen?" : "Ready to make the video?";
+    let brod = no
+      ? "Videoen blir ca "+sekTxt+" og tar vanligvis noen minutter. La fanen stå åpen mens den lages."
+      : "The video will be about "+sekTxt+" and usually takes a few minutes. Keep the tab open while it's made.";
+    if(KOSTNAD_MODUS && sek){
+      const kost=(sek*PRIS_PER_SEK).toFixed(2);
+      brod += no ? "\n\nEstimert kostnad: ca $"+kost+" i fal-kreditter."
+                 : "\n\nEstimated cost: about $"+kost+" in fal credits.";
+    }
+    const lagTxt   = T("lagVideoen") || (no?"Lag video":"Make video");
+    const avbrytTxt= no ? "Avbryt" : "Cancel";
+
+    const ov=document.createElement("div");
+    ov.setAttribute("style","position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px");
+    const kort=document.createElement("div");
+    kort.setAttribute("style","max-width:340px;width:100%;background:#fff;color:#1b2432;border-radius:18px;padding:22px 20px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;font-family:inherit");
+    kort.innerHTML="<h3 style='margin:0 0 10px;font-size:19px'>"+tittel+"</h3>"+
+      "<p style='margin:0 0 18px;font-size:14.5px;line-height:1.5;white-space:pre-line;color:#3a4452'>"+brod+"</p>";
+    const rad=document.createElement("div");
+    rad.setAttribute("style","display:flex;gap:10px");
+    const nei=document.createElement("button");
+    nei.textContent=avbrytTxt;
+    nei.setAttribute("style","flex:1;padding:13px;border-radius:12px;border:1px solid #cdd3db;background:#f3f5f8;color:#3a4452;font-weight:600;font-size:15px;cursor:pointer");
+    const ja=document.createElement("button");
+    ja.textContent=lagTxt;
+    ja.setAttribute("style","flex:1;padding:13px;border-radius:12px;border:none;background:#111827;color:#fff;font-weight:700;font-size:15px;cursor:pointer");
+    const lukk=(svar)=>{ try{document.body.removeChild(ov);}catch(e){} res(svar); };
+    nei.onclick=()=>lukk(false); ja.onclick=()=>lukk(true);
+    rad.appendChild(nei); rad.appendChild(ja); kort.appendChild(rad); ov.appendChild(kort);
+    ov.addEventListener("click",(e)=>{ if(e.target===ov) lukk(false); });
+    document.body.appendChild(ov);
+  });
+}
 async function lagVideo(){
   if(!bildeBlob || !valgtSang) return;
   stoppForhands();
   if(!valgtSang.url){ visFeil(T("feilSang")); return; }
   if(TJENESTE.includes("DIN-TJENESTE-APP")){ visFeil(T("feilTjeneste")); return; }
+  if(!(await bekreftGenerering(valgtSang.url))) return;   // kostnadssikring: ingen spend uten bekreftelse
 
   visSeksjon("steg4"); startLaster();
   try{
