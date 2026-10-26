@@ -845,7 +845,7 @@ async function brukEgenLyd(blob, sek){
   const url = await blobTilData(blob);
   const sang = { id:"egen", tittel:egenLydNavn||T("egenLydMeta"), meta:T("egenLydMeta")+" · "+sek+" s",
                  anledning: valgtAnledning||"Sanger", url, egen:true,
-                 prompt:"The person speaks naturally and warmly, telling a story to the viewer — calm, friendly expression, clear natural lip movement, gentle nods and small head movements, occasional smile. Not singing." };
+                 prompt:"The person speaks naturally and warmly, telling a story to the viewer — facing the camera and looking straight into the lens, calm friendly expression, clear natural lip movement, gentle nods and only small head movements, occasional smile. Not singing." };
   SANGER = SANGER.filter(s=>s.id!=="egen"); SANGER.push(sang);
   valgtSang = sang;
   byggSanger();
