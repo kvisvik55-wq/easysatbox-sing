@@ -1010,7 +1010,8 @@ async function lagFjordVideo(){
   try{
     const c=await byggComposite(true);               // full composite med utklipt person
     const bildeData=c.toDataURL("image/jpeg",0.88);
-    const vid=await kall("startVideo",{ bilde: bildeData, audioUrl: sang.url,
+    const [bUrl, lUrl]=await Promise.all([tilFalUrl(bildeData), tilFalUrl(sang.url)]);
+    const vid=await kall("startVideo",{ bildeUrl: bUrl, audioUrl: lUrl,
       prompt: "The person sings warmly and joyfully — expressive face, genuine smile, natural head movement. The person stays in place; the landscape and the wooden text banner at the bottom stay completely still." });
     const { videoUrl }=await vent("pollVideo", vid.id);
     const blob=await (await fetch(videoUrl)).blob();
@@ -1081,8 +1082,18 @@ function startLaster(){
   el.textContent=arr[0];
   lasteTimer=setInterval(()=>{ i=(i+1)%arr.length; el.textContent=arr[i]; },4000);
 }
+/* Data-URL → last opp til fal først (eget kort kall, ingen kostnad). https-URL brukes som den er. */
+async function tilFalUrl(x){
+  if(typeof x==="string" && x.startsWith("data:")){ const d=await kall("lastOpp",{ data:x }); return d.url; }
+  return x;
+}
 async function kall(action, body){
   const r=await fetch(`${TJENESTE}?action=${action}`,{method:"POST",headers:{"Content-Type":"application/json","X-ESB-Nokkel":EIER_NOKKEL},body:JSON.stringify(body||{})});
+  if(r.status===504||r.status===502){
+    throw new Error(action==="startVideo"
+      ? "Tjenesten svarte ikke i tide. Videoen KAN likevel være bestilt — sjekk fal.ai/dashboard før du prøver igjen."
+      : "Tjenesten svarte ikke i tide (ingen kostnad). Prøv igjen.");
+  }
   if(r.status===401||r.status===403){ EIER_NOKKEL=""; LAGER.slett("esb_sing_nokkel"); throw new Error(T("feilLaast")); }
   const d=await r.json(); if(!r.ok||d.error) throw new Error(d.error||"feil"); return d;
 }
@@ -1205,7 +1216,8 @@ async function lagVideo(){
   try{
     // v1: bilde + sang rett til OmniHuman (stemmekloning kommer i v2)
     const bildeData=await bildeTilData(bildeBlob, 1024, 0.85);
-    const vid=await kall("startVideo",{ bilde: bildeData, audioUrl: valgtSang.url, prompt: valgtSang.prompt || "" });
+    const [bUrl, lUrl]=await Promise.all([tilFalUrl(bildeData), tilFalUrl(valgtSang.url)]);
+    const vid=await kall("startVideo",{ bildeUrl: bUrl, audioUrl: lUrl, prompt: valgtSang.prompt || "" });
     const { videoUrl }=await vent("pollVideo", vid.id);
 
     const blob=await (await fetch(videoUrl)).blob();
