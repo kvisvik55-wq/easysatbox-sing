@@ -1084,7 +1084,7 @@ let EIER_NOKKEL = (()=>{ try{
 }catch(e){ return ""; } })();
 
 const PRIS_PER_SEK = 0.16;         // fal 720p, per sekund
-const MAKS_SEK      = 30;          // hard grense: aldri generer lengre lyd enn dette (~$4,80)
+const MAKS_SEK      = 60;          // OmniHuman 1.5 720p tåler maks 60 sek (~$9,60)
 const KOSTNAD_MODUS = (()=>{ try{
   const u=new URLSearchParams(location.search);
   if(u.get("kostnad")==="1") localStorage.setItem("esb_sing_kostnad","1");
