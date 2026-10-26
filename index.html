@@ -1013,7 +1013,9 @@ async function lagFjordVideo(){
     const [bUrl, lUrl]=await Promise.all([tilFalUrl(bildeData), tilFalUrl(sang.url)]);
     const vid=await kall("startVideo",{ bildeUrl: bUrl, audioUrl: lUrl,
       prompt: "The person sings warmly and joyfully — expressive face, genuine smile, natural head movement. The person stays in place; the landscape and the wooden text banner at the bottom stay completely still." });
+    if(!(JSON.parse(LAGER.les("sing_ventende")||"[]")).some(v=>v.id===vid.id)) huskVentende(vid.id, (fjordSang||{}).tittel);
     const { videoUrl }=await vent("pollVideo", vid.id);
+    glemVentende(vid.id);
     const blob=await (await fetch(videoUrl)).blob();
     const lokal=URL.createObjectURL(blob);
     clearInterval(lasteTimer);
@@ -1026,6 +1028,36 @@ async function lagFjordVideo(){
     visFjord();
     visFeil(T("feilVideo") + feilDetalj(e));
   }
+}
+
+/* ── Ventende bestillinger: overlever lukket fane / tidsavbrudd ── */
+function huskVentende(id, tittel){
+  try{ const l=JSON.parse(LAGER.les("sing_ventende")||"[]"); l.push({id, tittel:tittel||"Video", tid:Date.now()});
+       LAGER.skriv("sing_ventende", JSON.stringify(l.slice(-10))); }catch(e){}
+}
+function glemVentende(id){
+  try{ const l=JSON.parse(LAGER.les("sing_ventende")||"[]").filter(v=>v.id!==id);
+       l.length?LAGER.skriv("sing_ventende", JSON.stringify(l)):LAGER.slett("sing_ventende"); }catch(e){}
+}
+async function sjekkVentende(){
+  let l=[]; try{ l=JSON.parse(LAGER.les("sing_ventende")||"[]"); }catch(e){}
+  if(!l.length || !EIER_NOKKEL) return;
+  for(const v of l){
+    if(Date.now()-v.tid > 7*24*3600*1000){ glemVentende(v.id); continue; }
+    try{
+      const d=await kall("pollVideo",{id:v.id});
+      if(d.status==="done"){
+        glemVentende(v.id);
+        const liste=JSON.parse(LAGER.les("sing_historikk")||"[]");
+        if(!liste.some(x=>x.url===d.videoUrl)){
+          liste.unshift({ url:d.videoUrl, navn:"", tittel:v.tittel+" (hentet)", tid:v.tid });
+          LAGER.skriv("sing_historikk", JSON.stringify(liste.slice(0,20)));
+        }
+        visHistorikk();
+      }
+    }catch(e){}
+  }
+  try{ if(JSON.parse(LAGER.les("sing_ventende")||"[]").length) setTimeout(sjekkVentende, 60000); }catch(e){}
 }
 
 /* ── Ferdig video: last ned automatisk + husk i historikken ── */
@@ -1102,7 +1134,7 @@ async function kall(action, body){
    Tidligere grense på 5 min var for kort for lengre klipp – da ga appen opp
    selv om fal fortsatte, fullførte og belastet. */
 async function vent(action, id){
-  for(let i=0;i<360;i++){
+  for(let i=0;i<900;i++){   // opptil ~30 min (fal kan ha kø)
     const d=await kall(action,{id});
     if(d.status==="done") return d;
     if(d.status==="error") throw new Error(d.error||"feil");
@@ -1112,7 +1144,7 @@ async function vent(action, id){
 }
 /* Vis den EKTE årsaken i feilmeldingen, ikke bare «kunne ikke lage video». */
 function feilDetalj(e){
-  if(e && e.timeout) return " — videoen tok for lang tid denne gangen. Prøv én gang til.";
+  if(e && e.timeout) return " — fal bruker uvanlig lang tid. IKKE bestill på nytt: videoen hentes automatisk til «Mine siste videoer» når den er ferdig (la siden stå åpen eller åpne den senere).";
   const m = e && e.message ? String(e.message) : "";
   return m && m !== "feil" ? " (" + m + ")" : "";
 }
@@ -1218,7 +1250,9 @@ async function lagVideo(){
     const bildeData=await bildeTilData(bildeBlob, 1024, 0.85);
     const [bUrl, lUrl]=await Promise.all([tilFalUrl(bildeData), tilFalUrl(valgtSang.url)]);
     const vid=await kall("startVideo",{ bildeUrl: bUrl, audioUrl: lUrl, prompt: valgtSang.prompt || "" });
+    huskVentende(vid.id, valgtSang.tittel);
     const { videoUrl }=await vent("pollVideo", vid.id);
+    glemVentende(vid.id);
 
     const blob=await (await fetch(videoUrl)).blob();
     const lokal=URL.createObjectURL(blob);
@@ -1309,7 +1343,7 @@ function skjulFeil(){document.getElementById("feil").classList.add("skjult");}
   lb.classList.toggle("aktiv", lesPaa); lb.setAttribute("aria-pressed", lesPaa?"true":"false");
   try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){}
 
-  visHistorikk();
+  visHistorikk(); sjekkVentende();
   await lastSanger(); await lastScener();
   settSprak(LAGER.les("sing_sprak") || (navigator.language||"no").slice(0,2));
   visSteg(1);
