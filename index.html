@@ -1134,8 +1134,15 @@ async function kall(action, body){
    Tidligere grense på 5 min var for kort for lengre klipp – da ga appen opp
    selv om fal fortsatte, fullførte og belastet. */
 async function vent(action, id){
+  let feilPaRad=0;
   for(let i=0;i<900;i++){   // opptil ~30 min (fal kan ha kø)
-    const d=await kall(action,{id});
+    let d;
+    try{ d=await kall(action,{id}); feilPaRad=0; }
+    catch(e){
+      // fal/Netlify kan svare med Gateway Timeout midt i — videoen lages likevel. Prøv videre.
+      if(++feilPaRad>=60){ const t=new Error("timeout"); t.timeout=true; throw t; }
+      await new Promise(r=>setTimeout(r,5000)); continue;
+    }
     if(d.status==="done") return d;
     if(d.status==="error") throw new Error(d.error||"feil");
     await new Promise(r=>setTimeout(r,2000));
