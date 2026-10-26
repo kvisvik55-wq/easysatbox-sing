@@ -320,6 +320,12 @@
 
     <div id="feil" class="varsel skjult"></div>
   </div>
+
+  <div id="historikk" class="scene skjult" style="margin-top:18px">
+    <div class="eyebrow">Mine siste videoer</div>
+    <p class="hint" style="margin:4px 0 12px">Lagres bare i denne nettleseren. Lenkene virker så lenge fal tar vare på videoen — last ned de du vil beholde.</p>
+    <div id="historikkListe" class="sanger"></div>
+  </div>
 </div>
 
 <script>
@@ -1011,7 +1017,7 @@ async function lagFjordVideo(){
     const lokal=URL.createObjectURL(blob);
     clearInterval(lasteTimer);
     document.getElementById("resultatVideo").src=lokal;
-    document.getElementById("lastNed").href=lokal;
+    document.getElementById("lastNed").href=lokal; lagreOgLastNed(videoUrl, lokal);
     visSeksjon("stegFerdig");
   }catch(e){
     clearInterval(lasteTimer);
@@ -1019,6 +1025,41 @@ async function lagFjordVideo(){
     visFjord();
     visFeil(T("feilVideo") + feilDetalj(e));
   }
+}
+
+/* ── Ferdig video: last ned automatisk + husk i historikken ── */
+function filnavnNaa(){ const d=new Date(), p=n=>String(n).padStart(2,"0");
+  return `sing-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.mp4`; }
+function lagreOgLastNed(videoUrl, lokal){
+  const navn=filnavnNaa();
+  const a=document.getElementById("lastNed"); a.download=navn;
+  try{ const x=document.createElement("a"); x.href=lokal; x.download=navn; document.body.appendChild(x); x.click(); x.remove(); }catch(e){}
+  try{
+    const liste=JSON.parse(LAGER.les("sing_historikk")||"[]");
+    const s=(valgtSang||fjordSang||{});
+    liste.unshift({ url:videoUrl, navn, tittel:s.tittel||"Video", tid:Date.now() });
+    LAGER.skriv("sing_historikk", JSON.stringify(liste.slice(0,20)));
+  }catch(e){}
+  visHistorikk();
+}
+function visHistorikk(){
+  let liste=[]; try{ liste=JSON.parse(LAGER.les("sing_historikk")||"[]"); }catch(e){}
+  const boks=document.getElementById("historikk"), ul=document.getElementById("historikkListe");
+  if(!liste.length){ boks.classList.add("skjult"); return; }
+  ul.innerHTML="";
+  liste.forEach(v=>{
+    const d=new Date(v.tid);
+    const rad=document.createElement("div"); rad.className="sang";
+    const navn=document.createElement("span"); navn.className="sang__navn";
+    const t1=document.createElement("div"); t1.textContent=v.tittel;
+    const t2=document.createElement("div"); t2.className="sang__meta";
+    t2.textContent=d.toLocaleDateString("no-NO")+" kl. "+d.toLocaleTimeString("no-NO",{hour:"2-digit",minute:"2-digit"});
+    navn.append(t1,t2);
+    const lenke=document.createElement("a"); lenke.className="horknapp"; lenke.href=v.url; lenke.target="_blank"; lenke.rel="noopener";
+    lenke.textContent="Åpne"; lenke.style.textDecoration="none";
+    rad.append(navn,lenke); ul.appendChild(rad);
+  });
+  boks.classList.remove("skjult");
 }
 
 /* ── Hjelpere ─────────────────────────────────────────── */
@@ -1171,7 +1212,7 @@ async function lagVideo(){
     const lokal=URL.createObjectURL(blob);
     clearInterval(lasteTimer);
     document.getElementById("resultatVideo").src=lokal;
-    document.getElementById("lastNed").href=lokal;
+    document.getElementById("lastNed").href=lokal; lagreOgLastNed(videoUrl, lokal);
     visSeksjon("stegFerdig");
   }catch(e){
     clearInterval(lasteTimer);
@@ -1256,6 +1297,7 @@ function skjulFeil(){document.getElementById("feil").classList.add("skjult");}
   lb.classList.toggle("aktiv", lesPaa); lb.setAttribute("aria-pressed", lesPaa?"true":"false");
   try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){}
 
+  visHistorikk();
   await lastSanger(); await lastScener();
   settSprak(LAGER.les("sing_sprak") || (navigator.language||"no").slice(0,2));
   visSteg(1);
