@@ -270,7 +270,7 @@
         <h2 data-i18n="s3t"></h2>
         <p class="ingress" data-i18n="s3i"></p>
         <div class="sanger" id="sanger"></div>
-        <button class="egenlyd skjult" id="egenLydKnapp" type="button" onclick="document.getElementById('egenLydInput').click()">
+        <button class="egenlyd" id="egenLydKnapp" type="button" onclick="egenLydKlikk()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>
           <span data-i18n="egenLyd"></span>
         </button>
@@ -368,7 +368,7 @@ const I18N = {
    mikStart:"Trykk for å starte",mikStopp:"Trykk for å stoppe",mikFerdig:"Ferdig — hør gjerne på det, eller ta opp på nytt",
    samtykke:"Jeg godtar at min egen stemme brukes til å lage denne videoen.",
    s3t:"Velg en sang",s3i:"Trykk på sangen du vil synge.",hvaFeirer:"Hva feirer du?",hvaFeirerIngress:"Trykk på anledningen.",andreAnledninger:"Andre anledninger",hor:"Hør",stopp:"Stopp",lagVideoen:"Lag videoen",
-   egenLyd:"Bruk egen lyd (mp3 fra enheten)",egenLydMeta:"Egen lyd",trimTittel:"Lyden er for lang",trimTekst:"Lyden er {sek} sek. Videoen kan være maks {maks} sek. Velg hvor utsnittet skal starte.",trimStart:"Starter ved",brukUtsnitt:"Bruk utsnittet",horUtsnitt:"Hør utsnittet",feilEgenLyd:"Kunne ikke lese lydfila. Prøv en annen fil (mp3, m4a eller wav).",feilLaast:"Videolaging er ikke åpen ennå. Kommer snart!",
+   egenLyd:"Bruk egen lyd (mp3 fra enheten)",egenLydMeta:"Egen lyd",trimTittel:"Lyden er for lang",trimTekst:"Lyden er {sek} sek. Videoen kan være maks {maks} sek. Velg hvor utsnittet skal starte.",trimStart:"Starter ved",brukUtsnitt:"Bruk utsnittet",horUtsnitt:"Hør utsnittet",feilEgenLyd:"Kunne ikke lese lydfila. Prøv en annen fil (mp3, m4a eller wav).",feilLaast:"Videolaging er ikke åpen ennå. Kommer snart!",skrivNokkel:"Skriv inn eiernøkkelen:",
    lasterHint:"Dette tar vanligvis under ett minutt.",
    laster:["Gjør klar sangen…", "Vekker bildet til live…", "Øver på teksten…", "Finner tonen…", "Snart klart…"],
    rt:"Nå synger du!",ri:"Se videoen, last den ned eller lag en ny.",lastNed:"Last ned videoen",lagNy:"Lag en ny video",
@@ -381,7 +381,7 @@ const I18N = {
    mikStart:"Tap to start",mikStopp:"Tap to stop",mikFerdig:"Done — have a listen, or record again",
    samtykke:"I agree that my own voice is used to make this video.",
    s3t:"Choose a song",s3i:"Tap the song you want to sing.",hvaFeirer:"What are you celebrating?",hvaFeirerIngress:"Tap the occasion.",andreAnledninger:"Other occasions",hor:"Listen",stopp:"Stop",lagVideoen:"Make the video",
-   egenLyd:"Use my own audio (mp3 from this device)",egenLydMeta:"My audio",trimTittel:"The audio is too long",trimTekst:"The audio is {sek}s. The video can be at most {maks}s. Choose where the clip should start.",trimStart:"Starts at",brukUtsnitt:"Use this clip",horUtsnitt:"Play clip",feilEgenLyd:"Couldn't read the audio file. Try another file (mp3, m4a or wav).",feilLaast:"Video creation isn't open yet. Coming soon!",
+   egenLyd:"Use my own audio (mp3 from this device)",egenLydMeta:"My audio",trimTittel:"The audio is too long",trimTekst:"The audio is {sek}s. The video can be at most {maks}s. Choose where the clip should start.",trimStart:"Starts at",brukUtsnitt:"Use this clip",horUtsnitt:"Play clip",feilEgenLyd:"Couldn't read the audio file. Try another file (mp3, m4a or wav).",feilLaast:"Video creation isn't open yet. Coming soon!",skrivNokkel:"Enter the owner key:",
    lasterHint:"This usually takes under a minute.",
    laster:["Getting the song ready…", "Bringing your photo to life…", "Rehearsing the words…", "Finding the tune…", "Almost there…"],
    rt:"Now you're singing!",ri:"Watch the video, download it or make a new one.",lastNed:"Download the video",lagNy:"Make a new video",
@@ -744,6 +744,16 @@ function velgSang(sang, el){
    i nettleseren (Web Audio → WAV, mono 22 050 Hz) før den brukes. */
 let egenLydBuffer=null, egenLydNavn="", trimLyd=null;
 
+/* Første gang: spør om eiernøkkel, husk den, åpne filvelgeren */
+function egenLydKlikk(){
+  if(!EIER_NOKKEL){
+    const n=(window.prompt(T("skrivNokkel"))||"").trim();
+    if(!n) return;
+    EIER_NOKKEL=n; LAGER.skriv("esb_sing_nokkel", n);
+  }
+  document.getElementById("egenLydInput").click();
+}
+
 async function lastEgenLyd(input){
   const fil=input.files[0]; input.value=""; if(!fil) return;
   skjulFeil(); stoppForhands(); stoppTrimLyd();
@@ -1032,7 +1042,7 @@ function startLaster(){
 }
 async function kall(action, body){
   const r=await fetch(`${TJENESTE}?action=${action}`,{method:"POST",headers:{"Content-Type":"application/json","X-ESB-Nokkel":EIER_NOKKEL},body:JSON.stringify(body||{})});
-  if(r.status===401||r.status===403) throw new Error(T("feilLaast"));
+  if(r.status===401||r.status===403){ EIER_NOKKEL=""; LAGER.slett("esb_sing_nokkel"); throw new Error(T("feilLaast")); }
   const d=await r.json(); if(!r.ok||d.error) throw new Error(d.error||"feil"); return d;
 }
 /* Vent på ferdig video. Lengre sanger (f.eks. 15–20 sek) tar lengre tid å
@@ -1065,7 +1075,7 @@ function feilDetalj(e){
    Generering koster penger, så tjenesten krever en hemmelig nøkkel.
    Åpne appen én gang med ?nokkel=DIN-NØKKEL på din enhet – den huskes.
    ?nokkel=ut fjerner den. Uten nøkkel: ingen generering, ingen egen lyd. */
-const EIER_NOKKEL = (()=>{ try{
+let EIER_NOKKEL = (()=>{ try{
   const u=new URLSearchParams(location.search), n=u.get("nokkel");
   if(n==="ut") localStorage.removeItem("esb_sing_nokkel");
   else if(n) localStorage.setItem("esb_sing_nokkel", n);
@@ -1246,7 +1256,6 @@ function skjulFeil(){document.getElementById("feil").classList.add("skjult");}
   lb.classList.toggle("aktiv", lesPaa); lb.setAttribute("aria-pressed", lesPaa?"true":"false");
   try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){}
 
-  if(EIER_NOKKEL) document.getElementById("egenLydKnapp").classList.remove("skjult");
   await lastSanger(); await lastScener();
   settSprak(LAGER.les("sing_sprak") || (navigator.language||"no").slice(0,2));
   visSteg(1);
