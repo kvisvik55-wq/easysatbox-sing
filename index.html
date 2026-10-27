@@ -374,7 +374,7 @@ const I18N = {
    mikStart:"Trykk for å starte",mikStopp:"Trykk for å stoppe",mikFerdig:"Ferdig — hør gjerne på det, eller ta opp på nytt",
    samtykke:"Jeg godtar at min egen stemme brukes til å lage denne videoen.",
    s3t:"Velg en sang",s3i:"Trykk på sangen du vil synge.",hvaFeirer:"Hva feirer du?",hvaFeirerIngress:"Trykk på anledningen.",andreAnledninger:"Andre anledninger",hor:"Hør",stopp:"Stopp",lagVideoen:"Lag videoen",
-   egenLyd:"Bruk egen lyd (mp3 fra enheten)",egenLydMeta:"Egen lyd",trimTittel:"Lyden er for lang",trimTekst:"Lyden er {sek} sek. Videoen kan være maks {maks} sek. Velg hvor utsnittet skal starte.",trimStart:"Starter ved",brukUtsnitt:"Bruk utsnittet",horUtsnitt:"Hør utsnittet",feilEgenLyd:"Kunne ikke lese lydfila. Prøv en annen fil (mp3, m4a eller wav).",feilLaast:"Videolaging er ikke åpen ennå. Kommer snart!",skrivNokkel:"Skriv inn eiernøkkelen:",
+   egenLyd:"Bruk egen lyd (mp3 fra enheten)",egenLydMeta:"Egen lyd",trimTittel:"Lyden er for lang",trimTekst:"Lyden er {sek} sek. Videoen kan være maks {maks} sek. Velg hvor utsnittet skal starte.",trimStart:"Starter ved",brukUtsnitt:"Bruk utsnittet",horUtsnitt:"Hør utsnittet",feilEgenLyd:"Kunne ikke lese lydfila. Prøv en annen fil (mp3, m4a eller wav).",feilLaast:"Videolaging er ikke åpen ennå. Kommer snart!",leserLyd:"Leser lydfila … lange låter tar noen sekunder",skrivNokkel:"Skriv inn eiernøkkelen:",
    lasterHint:"Dette tar vanligvis under ett minutt.",
    laster:["Gjør klar sangen…", "Vekker bildet til live…", "Øver på teksten…", "Finner tonen…", "Snart klart…"],
    rt:"Nå synger du!",ri:"Se videoen, last den ned eller lag en ny.",lastNed:"Last ned videoen",lagNy:"Lag en ny video",
@@ -387,7 +387,7 @@ const I18N = {
    mikStart:"Tap to start",mikStopp:"Tap to stop",mikFerdig:"Done — have a listen, or record again",
    samtykke:"I agree that my own voice is used to make this video.",
    s3t:"Choose a song",s3i:"Tap the song you want to sing.",hvaFeirer:"What are you celebrating?",hvaFeirerIngress:"Tap the occasion.",andreAnledninger:"Other occasions",hor:"Listen",stopp:"Stop",lagVideoen:"Make the video",
-   egenLyd:"Use my own audio (mp3 from this device)",egenLydMeta:"My audio",trimTittel:"The audio is too long",trimTekst:"The audio is {sek}s. The video can be at most {maks}s. Choose where the clip should start.",trimStart:"Starts at",brukUtsnitt:"Use this clip",horUtsnitt:"Play clip",feilEgenLyd:"Couldn't read the audio file. Try another file (mp3, m4a or wav).",feilLaast:"Video creation isn't open yet. Coming soon!",skrivNokkel:"Enter the owner key:",
+   egenLyd:"Use my own audio (mp3 from this device)",egenLydMeta:"My audio",trimTittel:"The audio is too long",trimTekst:"The audio is {sek}s. The video can be at most {maks}s. Choose where the clip should start.",trimStart:"Starts at",brukUtsnitt:"Use this clip",horUtsnitt:"Play clip",feilEgenLyd:"Couldn't read the audio file. Try another file (mp3, m4a or wav).",feilLaast:"Video creation isn't open yet. Coming soon!",leserLyd:"Reading the audio file … long tracks take a few seconds",skrivNokkel:"Enter the owner key:",
    lasterHint:"This usually takes under a minute.",
    laster:["Getting the song ready…", "Bringing your photo to life…", "Rehearsing the words…", "Finding the tune…", "Almost there…"],
    rt:"Now you're singing!",ri:"Watch the video, download it or make a new one.",lastNed:"Download the video",lagNy:"Make a new video",
@@ -765,12 +765,18 @@ async function lastEgenLyd(input){
   skjulFeil(); stoppForhands(); stoppTrimLyd();
   egenLydNavn = fil.name.replace(/\.[^.]+$/,"").replace(/[<>&"]/g,"").replace(/[_-]+/g," ").trim();
   if(egenLydNavn.length>34) egenLydNavn = egenLydNavn.slice(0,32).trim()+"…";
+  // Vis med en gang at noe skjer — lange låter tar noen sekunder å lese
+  const tb=document.getElementById("trimBoks");
+  tb.innerHTML='<div class="laster" style="padding:8px 0"><div class="snurr" style="width:56px;height:56px;border-width:6px;margin-bottom:12px"></div><p style="font-size:17px">'+T("leserLyd")+'</p></div>';
+  tb.classList.remove("skjult"); tb.scrollIntoView({behavior:"smooth",block:"center"});
+  document.getElementById("egenLydKnapp").disabled=true;
   try{
     const ab = await fil.arrayBuffer();
     const ctx = new (window.AudioContext||window.webkitAudioContext)();
     egenLydBuffer = await ctx.decodeAudioData(ab);
     try{ ctx.close(); }catch(e){}
-  }catch(e){ console.error(e); visFeil(T("feilEgenLyd")); return; }
+  }catch(e){ console.error(e); tb.classList.add("skjult"); document.getElementById("egenLydKnapp").disabled=false; visFeil(T("feilEgenLyd")); return; }
+  document.getElementById("egenLydKnapp").disabled=false;
 
   const sek = egenLydBuffer.duration;
   if(sek <= MAKS_SEK + 0.5){
