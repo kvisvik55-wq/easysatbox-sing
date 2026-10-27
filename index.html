@@ -730,10 +730,10 @@ function forhandsvis(sang, knapp){
 function stoppForhands(){
   if(forhandsLyd){ forhandsLyd.pause(); forhandsLyd=null; }
   spillerId=null;
-  document.querySelectorAll(".horknapp").forEach(k=>{
+  document.querySelectorAll(".horknapp:not(.aapneknapp)").forEach(k=>{
     k.classList.remove("spiller");
-    k.querySelector(".horknapp__tekst").textContent=T("hor");
-    k.querySelector("svg").outerHTML=IKON_PLAY;
+    const t=k.querySelector(".horknapp__tekst"); if(t) t.textContent=T("hor");
+    const ik=k.querySelector("svg"); if(ik) ik.outerHTML=IKON_PLAY;
   });
 }
 function velgSang(sang, el){
@@ -1094,7 +1094,7 @@ function visHistorikk(){
     const t2=document.createElement("div"); t2.className="sang__meta";
     t2.textContent=d.toLocaleDateString("no-NO")+" kl. "+d.toLocaleTimeString("no-NO",{hour:"2-digit",minute:"2-digit"});
     navn.append(t1,t2);
-    const lenke=document.createElement("a"); lenke.className="horknapp"; lenke.href=v.url; lenke.target="_blank"; lenke.rel="noopener";
+    const lenke=document.createElement("a"); lenke.className="horknapp aapneknapp"; lenke.href=v.url; lenke.target="_blank"; lenke.rel="noopener";
     lenke.textContent="Åpne"; lenke.style.textDecoration="none";
     rad.append(navn,lenke); ul.appendChild(rad);
   });
