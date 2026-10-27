@@ -154,7 +154,8 @@
   .egenlyd:hover{background:#f5efdc}
   .egenlyd:focus-visible{outline:4px solid var(--gull);outline-offset:2px}
   .egenlyd svg{width:24px;height:24px;flex:none}
-  #egenModus button[aria-pressed="true"]{background:var(--gronn-lys);color:var(--krem)}
+  .lengder button{min-width:68px;line-height:1.2}
+  .lengder button[aria-pressed="true"],#egenModus button[aria-pressed="true"]{background:var(--gronn-lys);color:var(--krem)}
   .trim{background:#fff;border:3px solid var(--gull);border-radius:16px;padding:16px 18px;margin:4px 0 12px}
   .trim h3{font-family:'Fraunces';font-weight:600;font-size:21px;margin:0 0 6px}
   .trim p{font-size:15px;color:var(--svak);margin:0 0 12px}
@@ -379,7 +380,7 @@ const I18N = {
    mikStart:"Trykk for å starte",mikStopp:"Trykk for å stoppe",mikFerdig:"Ferdig — hør gjerne på det, eller ta opp på nytt",
    samtykke:"Jeg godtar at min egen stemme brukes til å lage denne videoen.",
    s3t:"Velg en sang",s3i:"Trykk på sangen du vil synge.",hvaFeirer:"Hva feirer du?",hvaFeirerIngress:"Trykk på anledningen.",andreAnledninger:"Andre anledninger",hor:"Hør",stopp:"Stopp",lagVideoen:"Lag videoen",
-   egenLyd:"Bruk egen lyd (mp3 fra enheten)",egenLydMeta:"Egen lyd",trimTittel:"Lyden er for lang",trimTekst:"Lyden er {sek} sek. Videoen kan være maks {maks} sek. Velg hvor utsnittet skal starte.",trimStart:"Starter ved",brukUtsnitt:"Bruk utsnittet",horUtsnitt:"Hør utsnittet",feilEgenLyd:"Kunne ikke lese lydfila. Prøv en annen fil (mp3, m4a eller wav).",feilLaast:"Videolaging er ikke åpen ennå. Kommer snart!",leserLyd:"Leser lydfila … lange låter tar noen sekunder",modusSynger:"Synger",modusSnakker:"Snakker",skrivNokkel:"Skriv inn eiernøkkelen:",
+   egenLyd:"Bruk egen lyd (mp3 fra enheten)",egenLydMeta:"Egen lyd",trimTittel:"Lyden er for lang",trimTekst:"Lyden er {sek} sek. Videoen kan være maks {maks} sek. Velg hvor utsnittet skal starte.",trimStart:"Starter ved",brukUtsnitt:"Bruk utsnittet",horUtsnitt:"Hør utsnittet",feilEgenLyd:"Kunne ikke lese lydfila. Prøv en annen fil (mp3, m4a eller wav).",feilLaast:"Videolaging er ikke åpen ennå. Kommer snart!",leserLyd:"Leser lydfila … lange låter tar noen sekunder",modusSynger:"Synger",modusSnakker:"Snakker",klippTittel:"Velg lengde og utsnitt",klippTekst:"Lyden er {sek} sek. Velg hvor lang videoen skal være (pris står under), og hvor klippet skal starte.",hele:"Hele",skrivNokkel:"Skriv inn eiernøkkelen:",
    lasterHint:"Dette tar vanligvis under ett minutt.",
    laster:["Gjør klar sangen…", "Vekker bildet til live…", "Øver på teksten…", "Finner tonen…", "Snart klart…"],
    rt:"Nå synger du!",ri:"Se videoen, last den ned eller lag en ny.",lastNed:"Last ned videoen",lagNy:"Lag en ny video",
@@ -392,7 +393,7 @@ const I18N = {
    mikStart:"Tap to start",mikStopp:"Tap to stop",mikFerdig:"Done — have a listen, or record again",
    samtykke:"I agree that my own voice is used to make this video.",
    s3t:"Choose a song",s3i:"Tap the song you want to sing.",hvaFeirer:"What are you celebrating?",hvaFeirerIngress:"Tap the occasion.",andreAnledninger:"Other occasions",hor:"Listen",stopp:"Stop",lagVideoen:"Make the video",
-   egenLyd:"Use my own audio (mp3 from this device)",egenLydMeta:"My audio",trimTittel:"The audio is too long",trimTekst:"The audio is {sek}s. The video can be at most {maks}s. Choose where the clip should start.",trimStart:"Starts at",brukUtsnitt:"Use this clip",horUtsnitt:"Play clip",feilEgenLyd:"Couldn't read the audio file. Try another file (mp3, m4a or wav).",feilLaast:"Video creation isn't open yet. Coming soon!",leserLyd:"Reading the audio file … long tracks take a few seconds",modusSynger:"Sings",modusSnakker:"Speaks",skrivNokkel:"Enter the owner key:",
+   egenLyd:"Use my own audio (mp3 from this device)",egenLydMeta:"My audio",trimTittel:"The audio is too long",trimTekst:"The audio is {sek}s. The video can be at most {maks}s. Choose where the clip should start.",trimStart:"Starts at",brukUtsnitt:"Use this clip",horUtsnitt:"Play clip",feilEgenLyd:"Couldn't read the audio file. Try another file (mp3, m4a or wav).",feilLaast:"Video creation isn't open yet. Coming soon!",leserLyd:"Reading the audio file … long tracks take a few seconds",modusSynger:"Sings",modusSnakker:"Speaks",klippTittel:"Choose length and section",klippTekst:"The audio is {sek}s. Choose how long the video should be (price below) and where the clip starts.",hele:"All",skrivNokkel:"Enter the owner key:",
    lasterHint:"This usually takes under a minute.",
    laster:["Getting the song ready…", "Bringing your photo to life…", "Rehearsing the words…", "Finding the tune…", "Almost there…"],
    rt:"Now you're singing!",ri:"Watch the video, download it or make a new one.",lastNed:"Download the video",lagNy:"Make a new video",
@@ -796,7 +797,7 @@ async function lastEgenLyd(input){
   document.getElementById("egenLydKnapp").disabled=false;
 
   const sek = egenLydBuffer.duration;
-  if(sek <= MAKS_SEK + 0.5){
+  if(sek <= LENGDER[0] + 0.5){
     document.getElementById("trimBoks").classList.add("skjult");
     await brukEgenLyd(fil, Math.round(sek));
   }else{
@@ -804,27 +805,47 @@ async function lastEgenLyd(input){
   }
 }
 
+const LENGDER=[8,16,35,60];
+let valgtLengde, lagretLengde = (()=>{ const v=+LAGER.les("sing_lengde"); return LENGDER.includes(v)?v:16; })();
 function visTrim(sek){
   const boks=document.getElementById("trimBoks");
-  const maksStart = Math.max(0, sek - MAKS_SEK);
+  const valg = LENGDER.filter(l=>l<sek+0.5);                 // bare lengder lyden faktisk har
+  const hele = sek<=MAKS_SEK+0.5 ? Math.round(sek) : null;    // «hele» hvis lyden er kort nok
+  // Kort lyd (≤ 60 s): start på «Hele». Lang låt: husk forrige valg.
+  valgtLengde = hele ? hele : (valg.includes(+LAGER.les("sing_lengde")) ? +LAGER.les("sing_lengde") : (valg.includes(16)?16:valg[valg.length-1]));
+  const pris = l => "$"+(l*PRIS_PER_SEK).toFixed(2);
+  const knapp = (l,etikett) => `<button type="button" data-l="${l}" aria-pressed="${l===valgtLengde}">${etikett}<br><small>${pris(l)}</small></button>`;
   boks.innerHTML = `
-    <h3>${T("trimTittel")}</h3>
-    <p>${T("trimTekst",{sek:Math.round(sek),maks:MAKS_SEK})}</p>
-    <div class="tid"><span>${T("trimStart")}</span> <b id="trimTid">0:00</b> – <b id="trimSlutt">${fmtTid(MAKS_SEK)}</b></div>
-    <input type="range" id="trimStart" min="0" max="${Math.floor(maksStart)}" step="1" value="0" aria-label="${T("trimStart")}">
+    <h3>${T("klippTittel")}</h3>
+    <p>${T("klippTekst",{sek:Math.round(sek)})}</p>
+    <div class="forslag lengder" style="justify-content:center;margin-bottom:12px">
+      ${valg.map(l=>knapp(l, l+" s")).join("")}${hele && !valg.includes(hele) ? knapp(hele, T("hele")+" "+hele+" s") : ""}
+    </div>
+    <div class="tid"><span>${T("trimStart")}</span> <b id="trimTid">0:00</b> – <b id="trimSlutt"></b></div>
+    <input type="range" id="trimStart" min="0" step="1" value="0" aria-label="${T("trimStart")}">
     <div class="rad">
       <button class="knapp" type="button" id="trimHor">${T("horUtsnitt")}</button>
       <button class="knapp knapp--gull" type="button" id="trimBruk">${T("brukUtsnitt")}</button>
     </div>`;
   boks.classList.remove("skjult");
   const r=boks.querySelector("#trimStart");
-  const oppd=()=>{ const st=+r.value;
+  const oppd=()=>{
+    r.max = Math.max(0, Math.floor(sek - valgtLengde));
+    if(+r.value > +r.max) r.value = r.max;
+    const st=+r.value;
     boks.querySelector("#trimTid").textContent=fmtTid(st);
-    boks.querySelector("#trimSlutt").textContent=fmtTid(Math.min(sek, st+MAKS_SEK)); };
+    boks.querySelector("#trimSlutt").textContent=fmtTid(Math.min(sek, st+valgtLengde));
+    r.disabled = (+r.max===0);
+  };
+  boks.querySelectorAll(".lengder button").forEach(b=>b.onclick=()=>{
+    stoppTrimLyd(); valgtLengde=+b.dataset.l; if(LENGDER.includes(valgtLengde)) LAGER.skriv("sing_lengde", String(valgtLengde));
+    boks.querySelectorAll(".lengder button").forEach(x=>x.setAttribute("aria-pressed", x===b?"true":"false"));
+    oppd();
+  });
   r.oninput=()=>{ stoppTrimLyd(); oppd(); };
   boks.querySelector("#trimHor").onclick=()=>{
     if(trimLyd){ stoppTrimLyd(); return; }
-    const blob=klippTilWav(egenLydBuffer, +r.value, MAKS_SEK);
+    const blob=klippTilWav(egenLydBuffer, +r.value, valgtLengde);
     trimLyd=new Audio(URL.createObjectURL(blob));
     boks.querySelector("#trimHor").textContent=T("stopp");
     trimLyd.onended=stoppTrimLyd;
@@ -832,9 +853,9 @@ function visTrim(sek){
   };
   boks.querySelector("#trimBruk").onclick=async ()=>{
     stoppTrimLyd();
-    const blob=klippTilWav(egenLydBuffer, +r.value, MAKS_SEK);
+    const blob=klippTilWav(egenLydBuffer, +r.value, valgtLengde);
     boks.classList.add("skjult");
-    await brukEgenLyd(blob, MAKS_SEK);
+    await brukEgenLyd(blob, Math.round(Math.min(valgtLengde, sek - +r.value)));
   };
   oppd();
   boks.scrollIntoView({behavior:"smooth",block:"center"});
@@ -859,6 +880,8 @@ function klippTilWav(buf, start, lengde){
     let v=0; for(let c=0;c<n;c++) v+=kanaler[c][si]||0;
     data[i]=v/n;
   }
+  const fade=Math.min(Math.floor(utRate*0.3), Math.floor(utLen/4));
+  for(let i=0;i<fade;i++){ const f=i/fade; data[i]*=f; data[utLen-1-i]*=f; }
   const bytes=new ArrayBuffer(44+utLen*2), dv=new DataView(bytes);
   const str=(o,s)=>{ for(let i=0;i<s.length;i++) dv.setUint8(o+i, s.charCodeAt(i)); };
   str(0,"RIFF"); dv.setUint32(4,36+utLen*2,true); str(8,"WAVE");
