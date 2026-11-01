@@ -155,6 +155,7 @@
   .egenlyd:focus-visible{outline:4px solid var(--gull);outline-offset:2px}
   .egenlyd svg{width:24px;height:24px;flex:none}
   .lengder button{min-width:68px;line-height:1.2}
+  #modellValg button[aria-pressed="true"]{background:var(--gronn-lys);color:var(--krem)}
   .lengder button[aria-pressed="true"],#egenModus button[aria-pressed="true"]{background:var(--gronn-lys);color:var(--krem)}
   .trim{background:#fff;border:3px solid var(--gull);border-radius:16px;padding:16px 18px;margin:4px 0 12px}
   .trim h3{font-family:'Fraunces';font-weight:600;font-size:21px;margin:0 0 6px}
@@ -280,6 +281,10 @@
           <button type="button" data-modus="synger" aria-pressed="true" onclick="settModus('synger')">🎤 <span data-i18n="modusSynger"></span></button>
           <button type="button" data-modus="snakker" aria-pressed="false" onclick="settModus('snakker')">🗣 <span data-i18n="modusSnakker"></span></button>
         </div>
+        <div class="forslag" id="modellValg" style="justify-content:center;margin:-4px 0 12px">
+          <button type="button" data-m="menneske" onclick="settModell('menneske')">🙂 <span data-i18n="modellMenneske"></span></button>
+          <button type="button" data-m="figur" onclick="settModell('figur')">🧌 <span data-i18n="modellFigur"></span></button>
+        </div>
         <div id="trimBoks" class="trim skjult"></div>
         <input type="file" id="egenLydInput" accept="audio/*,.mp3,.m4a,.wav" class="skjult" onchange="lastEgenLyd(this)">
         <div class="rad">
@@ -380,7 +385,7 @@ const I18N = {
    mikStart:"Trykk for å starte",mikStopp:"Trykk for å stoppe",mikFerdig:"Ferdig — hør gjerne på det, eller ta opp på nytt",
    samtykke:"Jeg godtar at min egen stemme brukes til å lage denne videoen.",
    s3t:"Velg en sang",s3i:"Trykk på sangen du vil synge.",hvaFeirer:"Hva feirer du?",hvaFeirerIngress:"Trykk på anledningen.",andreAnledninger:"Andre anledninger",hor:"Hør",stopp:"Stopp",lagVideoen:"Lag videoen",
-   egenLyd:"Bruk egen lyd (mp3 fra enheten)",egenLydMeta:"Egen lyd",trimTittel:"Lyden er for lang",trimTekst:"Lyden er {sek} sek. Videoen kan være maks {maks} sek. Velg hvor utsnittet skal starte.",trimStart:"Starter ved",brukUtsnitt:"Bruk utsnittet",horUtsnitt:"Hør utsnittet",feilEgenLyd:"Kunne ikke lese lydfila. Prøv en annen fil (mp3, m4a eller wav).",feilLaast:"Videolaging er ikke åpen ennå. Kommer snart!",leserLyd:"Leser lydfila … lange låter tar noen sekunder",modusSynger:"Synger",modusSnakker:"Snakker",klippTittel:"Velg lengde og utsnitt",klippTekst:"Lyden er {sek} sek. Velg hvor lang videoen skal være (pris står under), og hvor klippet skal starte.",hele:"Hele",skrivNokkel:"Skriv inn eiernøkkelen:",
+   egenLyd:"Bruk egen lyd (mp3 fra enheten)",egenLydMeta:"Egen lyd",trimTittel:"Lyden er for lang",trimTekst:"Lyden er {sek} sek. Videoen kan være maks {maks} sek. Velg hvor utsnittet skal starte.",trimStart:"Starter ved",brukUtsnitt:"Bruk utsnittet",horUtsnitt:"Hør utsnittet",feilEgenLyd:"Kunne ikke lese lydfila. Prøv en annen fil (mp3, m4a eller wav).",feilLaast:"Videolaging er ikke åpen ennå. Kommer snart!",leserLyd:"Leser lydfila … lange låter tar noen sekunder",modusSynger:"Synger",modusSnakker:"Snakker",modellMenneske:"Menneske",modellFigur:"Figur / troll / dyr",klippTittel:"Velg lengde og utsnitt",klippTekst:"Lyden er {sek} sek. Velg hvor lang videoen skal være (pris står under), og hvor klippet skal starte.",hele:"Hele",skrivNokkel:"Skriv inn eiernøkkelen:",
    lasterHint:"Dette tar vanligvis under ett minutt.",
    laster:["Gjør klar sangen…", "Vekker bildet til live…", "Øver på teksten…", "Finner tonen…", "Snart klart…"],
    rt:"Nå synger du!",ri:"Se videoen, last den ned eller lag en ny.",lastNed:"Last ned videoen",lagNy:"Lag en ny video",
@@ -393,7 +398,7 @@ const I18N = {
    mikStart:"Tap to start",mikStopp:"Tap to stop",mikFerdig:"Done — have a listen, or record again",
    samtykke:"I agree that my own voice is used to make this video.",
    s3t:"Choose a song",s3i:"Tap the song you want to sing.",hvaFeirer:"What are you celebrating?",hvaFeirerIngress:"Tap the occasion.",andreAnledninger:"Other occasions",hor:"Listen",stopp:"Stop",lagVideoen:"Make the video",
-   egenLyd:"Use my own audio (mp3 from this device)",egenLydMeta:"My audio",trimTittel:"The audio is too long",trimTekst:"The audio is {sek}s. The video can be at most {maks}s. Choose where the clip should start.",trimStart:"Starts at",brukUtsnitt:"Use this clip",horUtsnitt:"Play clip",feilEgenLyd:"Couldn't read the audio file. Try another file (mp3, m4a or wav).",feilLaast:"Video creation isn't open yet. Coming soon!",leserLyd:"Reading the audio file … long tracks take a few seconds",modusSynger:"Sings",modusSnakker:"Speaks",klippTittel:"Choose length and section",klippTekst:"The audio is {sek}s. Choose how long the video should be (price below) and where the clip starts.",hele:"All",skrivNokkel:"Enter the owner key:",
+   egenLyd:"Use my own audio (mp3 from this device)",egenLydMeta:"My audio",trimTittel:"The audio is too long",trimTekst:"The audio is {sek}s. The video can be at most {maks}s. Choose where the clip should start.",trimStart:"Starts at",brukUtsnitt:"Use this clip",horUtsnitt:"Play clip",feilEgenLyd:"Couldn't read the audio file. Try another file (mp3, m4a or wav).",feilLaast:"Video creation isn't open yet. Coming soon!",leserLyd:"Reading the audio file … long tracks take a few seconds",modusSynger:"Sings",modusSnakker:"Speaks",modellMenneske:"Human",modellFigur:"Figure / troll / animal",klippTittel:"Choose length and section",klippTekst:"The audio is {sek}s. Choose how long the video should be (price below) and where the clip starts.",hele:"All",skrivNokkel:"Enter the owner key:",
    lasterHint:"This usually takes under a minute.",
    laster:["Getting the song ready…", "Bringing your photo to life…", "Rehearsing the words…", "Finding the tune…", "Almost there…"],
    rt:"Now you're singing!",ri:"Watch the video, download it or make a new one.",lastNed:"Download the video",lagNy:"Make a new video",
@@ -760,6 +765,11 @@ const EGEN_PROMPT = {
   snakker: "The character speaks naturally and warmly, telling a story to the viewer — facing the camera and looking straight into the lens, calm friendly expression, clear natural lip movement, gentle nods and only small head movements, occasional smile. Not singing."
 };
 let egenModus = (LAGER.les("sing_modus")==="snakker") ? "snakker" : "synger";
+function settModell(m){
+  videoModell = m; LAGER.skriv("sing_modell", m);
+  document.querySelectorAll("#modellValg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.m===m?"true":"false"));
+  document.querySelectorAll(".lengder button").forEach(b=>{ const sm=b.querySelector("small"); if(sm) sm.textContent="$"+(+b.dataset.l*prisPerSek()).toFixed(2); });
+}
 function settModus(m){
   egenModus = m; LAGER.skriv("sing_modus", m);
   document.querySelectorAll("#egenModus button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.modus===m ? "true":"false"));
@@ -813,7 +823,7 @@ function visTrim(sek){
   const hele = sek<=MAKS_SEK+0.5 ? Math.round(sek) : null;    // «hele» hvis lyden er kort nok
   // Kort lyd (≤ 60 s): start på «Hele». Lang låt: husk forrige valg.
   valgtLengde = hele ? hele : (valg.includes(+LAGER.les("sing_lengde")) ? +LAGER.les("sing_lengde") : (valg.includes(16)?16:valg[valg.length-1]));
-  const pris = l => "$"+(l*PRIS_PER_SEK).toFixed(2);
+  const pris = l => "$"+(l*prisPerSek()).toFixed(2);
   const knapp = (l,etikett) => `<button type="button" data-l="${l}" aria-pressed="${l===valgtLengde}">${etikett}<br><small>${pris(l)}</small></button>`;
   boks.innerHTML = `
     <h3>${T("klippTittel")}</h3>
@@ -1057,7 +1067,7 @@ async function lagFjordVideo(){
     const c=await byggComposite(true);               // full composite med utklipt person
     const bildeData=c.toDataURL("image/jpeg",0.88);
     const [bUrl, lUrl]=await Promise.all([tilFalUrl(bildeData), tilFalUrl(sang.url)]);
-    const vid=await kall("startVideo",{ bildeUrl: bUrl, audioUrl: lUrl,
+    const vid=await kall("startVideo",{ modell: videoModell, bildeUrl: bUrl, audioUrl: lUrl,
       prompt: "The person sings warmly and joyfully — expressive face, genuine smile, natural head movement. The person stays in place; the landscape and the wooden text banner at the bottom stay completely still." });
     if(!(JSON.parse(LAGER.les("sing_ventende")||"[]")).some(v=>v.id===vid.id)) huskVentende(vid.id, (fjordSang||{}).tittel);
     const { videoUrl }=await vent("pollVideo", vid.id);
@@ -1078,7 +1088,7 @@ async function lagFjordVideo(){
 
 /* ── Ventende bestillinger: overlever lukket fane / tidsavbrudd ── */
 function huskVentende(id, tittel){
-  try{ const l=JSON.parse(LAGER.les("sing_ventende")||"[]"); l.push({id, tittel:tittel||"Video", tid:Date.now()});
+  try{ const l=JSON.parse(LAGER.les("sing_ventende")||"[]"); l.push({id, tittel:tittel||"Video", tid:Date.now(), modell:videoModell});
        LAGER.skriv("sing_ventende", JSON.stringify(l.slice(-10))); }catch(e){}
 }
 function glemVentende(id){
@@ -1091,7 +1101,7 @@ async function sjekkVentende(){
   for(const v of l){
     if(Date.now()-v.tid > 7*24*3600*1000){ glemVentende(v.id); continue; }
     try{
-      const d=await kall("pollVideo",{id:v.id});
+      const d=await kall("pollVideo",{id:v.id, modell:v.modell||"menneske"});
       if(d.status==="error"){ glemVentende(v.id); continue; }
       if(d.status==="done"){
         glemVentende(v.id);
@@ -1174,17 +1184,18 @@ async function kall(action, body){
       : "Tjenesten svarte ikke i tide (ingen kostnad). Prøv igjen.");
   }
   if(r.status===401||r.status===403){ EIER_NOKKEL=""; LAGER.slett("esb_sing_nokkel"); throw new Error(T("feilLaast")); }
-  const d=await r.json(); if(!r.ok||d.error) throw new Error(d.error||"feil"); return d;
+  const d=await r.json(); if(!r.ok||(d.error && d.status!=="error")) throw new Error(d.error||"feil"); return d;
 }
 /* Vent på ferdig video. Lengre sanger (f.eks. 15–20 sek) tar lengre tid å
    generere, så vi venter i opptil ~12 minutter (360 × 2 sek) før vi gir opp.
    Tidligere grense på 5 min var for kort for lengre klipp – da ga appen opp
    selv om fal fortsatte, fullførte og belastet. */
-async function vent(action, id){
+async function vent(action, id, modell){
+  modell = modell || videoModell;
   let feilPaRad=0;
   for(let i=0;i<900;i++){   // opptil ~30 min (fal kan ha kø)
     let d;
-    try{ d=await kall(action,{id}); feilPaRad=0; }
+    try{ d=await kall(action,{id, modell}); feilPaRad=0; }
     catch(e){
       // fal/Netlify kan svare med Gateway Timeout midt i — videoen lages likevel. Prøv videre.
       if(++feilPaRad>=60){ const t=new Error("timeout"); t.timeout=true; throw t; }
@@ -1221,7 +1232,9 @@ let EIER_NOKKEL = (()=>{ try{
   return localStorage.getItem("esb_sing_nokkel")||"";
 }catch(e){ return ""; } })();
 
-const PRIS_PER_SEK = 0.16;         // fal 720p, per sekund
+const PRISER = { menneske:0.16, figur:0.0562 };   // fal: OmniHuman 720p / Kling AI Avatar v2
+let videoModell = (()=>{ const v=LAGER.les("sing_modell"); return v==="figur"?"figur":"menneske"; })();
+const prisPerSek = () => PRISER[videoModell];
 const MAKS_SEK      = 60;          // OmniHuman 1.5 720p tåler maks 60 sek (~$9,60)
 const KOSTNAD_MODUS = (()=>{ try{
   const u=new URLSearchParams(location.search);
@@ -1262,7 +1275,7 @@ function bekreftGenerering(url){
       ? "Videoen blir ca "+sekTxt+" og tar vanligvis noen minutter. La fanen stå åpen mens den lages."
       : "The video will be about "+sekTxt+" and usually takes a few minutes. Keep the tab open while it's made.";
     if(KOSTNAD_MODUS && sek){
-      const kost=(sek*PRIS_PER_SEK).toFixed(2);
+      const kost=(sek*prisPerSek()).toFixed(2);
       brod += no ? "\n\nEstimert kostnad: ca $"+kost+" i fal-kreditter."
                  : "\n\nEstimated cost: about $"+kost+" in fal credits.";
     }
@@ -1303,7 +1316,7 @@ async function lagVideo(){
     // v1: bilde + sang rett til OmniHuman (stemmekloning kommer i v2)
     const bildeData=await bildeTilData(bildeBlob, 1024, 0.85);
     const [bUrl, lUrl]=await Promise.all([tilFalUrl(bildeData), tilFalUrl(valgtSang.url)]);
-    const vid=await kall("startVideo",{ bildeUrl: bUrl, audioUrl: lUrl, prompt: valgtSang.prompt || "" });
+    const vid=await kall("startVideo",{ modell: videoModell, bildeUrl: bUrl, audioUrl: lUrl, prompt: valgtSang.prompt || "" });
     huskVentende(vid.id, valgtSang.tittel);
     const { videoUrl }=await vent("pollVideo", vid.id);
     glemVentende(vid.id);
@@ -1397,7 +1410,7 @@ function skjulFeil(){document.getElementById("feil").classList.add("skjult");}
   lb.classList.toggle("aktiv", lesPaa); lb.setAttribute("aria-pressed", lesPaa?"true":"false");
   try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){}
 
-  visHistorikk(); sjekkVentende(); settModus(egenModus);
+  visHistorikk(); sjekkVentende(); settModus(egenModus); settModell(videoModell);
   await lastSanger(); await lastScener();
   settSprak(LAGER.les("sing_sprak") || (navigator.language||"no").slice(0,2));
   visSteg(1);
