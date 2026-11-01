@@ -1092,6 +1092,7 @@ async function sjekkVentende(){
     if(Date.now()-v.tid > 7*24*3600*1000){ glemVentende(v.id); continue; }
     try{
       const d=await kall("pollVideo",{id:v.id});
+      if(d.status==="error"){ glemVentende(v.id); continue; }
       if(d.status==="done"){
         glemVentende(v.id);
         const liste=JSON.parse(LAGER.les("sing_historikk")||"[]");
@@ -1190,7 +1191,7 @@ async function vent(action, id){
       await new Promise(r=>setTimeout(r,5000)); continue;
     }
     if(d.status==="done") return d;
-    if(d.status==="error") throw new Error(d.error||"feil");
+    if(d.status==="error"){ glemVentende(id); throw new Error(d.error||"feil"); }
     await new Promise(r=>setTimeout(r,2000));
   }
   const e=new Error("timeout"); e.timeout=true; throw e;
