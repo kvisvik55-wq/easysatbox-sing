@@ -756,8 +756,8 @@ function velgSang(sang, el){
    i nettleseren (Web Audio → WAV, mono 22 050 Hz) før den brukes. */
 let egenLydBuffer=null, egenLydNavn="", trimLyd=null;
 const EGEN_PROMPT = {
-  synger: "The person sings the song with feeling — natural singing mouth movements that follow the melody, expressive face, eyes toward the camera, gentle natural head movement.",
-  snakker: "The person speaks naturally and warmly, telling a story to the viewer — facing the camera and looking straight into the lens, calm friendly expression, clear natural lip movement, gentle nods and only small head movements, occasional smile. Not singing."
+  synger: "The character sings the song with feeling — natural singing mouth movements that follow the melody, expressive face, eyes toward the camera, gentle natural head movement.",
+  snakker: "The character speaks naturally and warmly, telling a story to the viewer — facing the camera and looking straight into the lens, calm friendly expression, clear natural lip movement, gentle nods and only small head movements, occasional smile. Not singing."
 };
 let egenModus = (LAGER.les("sing_modus")==="snakker") ? "snakker" : "synger";
 function settModus(m){
